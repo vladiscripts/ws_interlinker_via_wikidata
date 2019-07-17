@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <title></title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css">
+    <style type="text/css">label {display: inline;}
+            .textfields div {display: inline;}
+            .years div {display: inline;}
+            .regions div {display: inline;}
+            <!--.regions label {display: inline;}-->
+            .settings div {display: inline;}
+            <!--.syssettings div {display: inline;}-->
+            <!--.regions select {max-width: 40em;}-->
+            td.regions-label {text-align: right;}
+            span.notes {font-size: small;}
+
+
+
+
+    </style>
+</head>
+<body>
+
+<!--<div class="container-fluid">-->
+
+<div class="container text-center">
+    <div class="page-header">
+        <h5></h5>
+    </div>
+    <div class="row">
+
+
+        <form method="post" action="">{% csrf_token %}
+            <div class="col-12 textfields">
+                <div>{{form.SEARCH_STRING.errors}} <b>*</b> {{form.SEARCH_STRING.label_tag}} {{form.SEARCH_STRING}}
+                </div>
+                <div>{{form.INN_BIN.errors}}{{form.INN_BIN.label_tag}} {{form.INN_BIN}}</div>
+                <div>{{form.CASE_NUMBER.errors}}{{form.CASE_NUMBER.label_tag}} {{form.CASE_NUMBER}}</div>
+            </div>
+        </form>
+
+    </div>
+
+
+    <div class="row">
+
+        <form method="post" action="">{% csrf_token %}
+            <div class="col-12 textfields">
+                <div>{{form.SEARCH_STRING.errors}} <b>*</b> {{form.SEARCH_STRING.label_tag}} {{form.SEARCH_STRING}}
+                </div>
+                <div>{{form.INN_BIN.errors}}{{form.INN_BIN.label_tag}} {{form.INN_BIN}}</div>
+                <div>{{form.CASE_NUMBER.errors}}{{form.CASE_NUMBER.label_tag}} {{form.CASE_NUMBER}}</div>
+            </div>
+
+            <br>
+
+            <div class="col-12 years">
+                <div>{{form.year.errors}} <b>*</b> <!--{{form.year.label_tag}}--> {{form.year}}</div>
+                <div>{{form.year2_range.errors}} — <!--{{form.year2_range.label_tag}}-->{{form.year2_range}}</div>
+                <div>{{form.year_search_all.errors}}<span>, <span class="notes">или</span> искать по всем годам:</span>
+                    <!--{{ form.year_search_all.label_tag }}--> {{form.year_search_all}}
+                </div>
+            </div>
+            <br>
+
+            <div class="col-12 regions">
+                <!--{{ form.region_all.errors }}<label>{{ form.region_all.label_tag }} {{ form.region_all }}</label>-->
+
+                <!--region_only-->
+                <!--region_all-->
+                <!--court_only-->
+                <!--court_all-->
+                <!--court-->
+                <!-- -->
+                <b>* Суды.</b>
+                <br>
+                <div>{{form.region_only.errors}}<!--{{form.region_only.label_tag}}--> {{form.region_only}}</div>
+
+                <!--<div>{{form.region_all.errors}}&lt;!&ndash;{{form.region_all.label_tag}}&ndash;&gt; {{form.region_all}}</div>-->
+
+                <div>{{form.court_all.errors}}{{form.court_all.label_tag}} {{form.court_all}}</div>
+                <br>
+                <span class="notes">Или выберите <i>только одно</i> значение ниже.</span>
+                <span class="notes">Если не выбран регион или суд, то поиск идёт по всем регионам.</span>
+                <br>
+                <table class="regions" align="left">
+                    <tr>
+                        <td class="regions-label">{{form.courts2.errors}}{{form.courts2.label_tag}}</td>
+                        <td>{{form.courts2}}</td>
+                    </tr>
+                    <tr>
+                        <td class="regions-label">{{form.courts3.errors}}{{form.courts3.label_tag}}</td>
+                        <td>{{form.courts3}}</td>
+                    </tr>
+                    <tr>
+                        <td class="regions-label">{{form.courts4.errors}}{{form.courts4.label_tag}}</td>
+                        <td> {{form.courts4}}</td>
+                    </tr>
+                    <tr>
+                        <td class="regions-label">{{form.courts5.errors}}{{form.courts5.label_tag}}</td>
+                        <td> {{form.courts5}}</td>
+                    </tr>
+                    <tr>
+                        <td class="regions-label">{{form.courts6.errors}}{{form.courts6.label_tag}}</td>
+                        <td> {{form.courts6}}</td>
+                    </tr>
+                    <tr>
+                        <td class="regions-label">{{form.courts7.errors}}{{form.courts7.label_tag}}</td>
+                        <td> {{form.courts7}}</td>
+                    </tr>
+                    <tr>
+                        <td class="regions-label">{{form.courts8.errors}}{{form.courts8.label_tag}}</td>
+                        <td> {{form.courts8}}</td>
+                    </tr>
+                    <tr>
+                        <td class="regions-label">{{form.courts9.errors}}{{form.courts9.label_tag}}</td>
+                        <td> {{form.courts9}}</td>
+                    </tr>
+                    <tr>
+                        <td class="regions-label">{{form.courts10.errors}}{{form.courts10.label_tag}}</td>
+                        <td> {{form.courts10}}</td>
+                    </tr>
+                    <tr>
+                        <td class="regions-label">{{form.courts11.errors}}{{form.courts11.label_tag}}</td>
+                        <td> {{form.courts11}}</td>
+                    </tr>
+                    <tr>
+                        <td class="regions-label">{{form.courts12.errors}}{{form.courts12.label_tag}}</td>
+                        <td> {{form.courts12}}</td>
+                    </tr>
+                    <tr>
+                        <td class="regions-label">{{form.courts13.errors}}{{form.courts13.label_tag}}</td>
+                        <td> {{form.courts13}}</td>
+                    </tr>
+                    <tr>
+                        <td class="regions-label">{{form.courts14.errors}}{{form.courts14.label_tag}}</td>
+                        <td> {{form.courts14}}</td>
+                    </tr>
+                    <tr>
+                        <td class="regions-label">{{form.courts15.errors}}{{form.courts15.label_tag}}</td>
+                        <td> {{form.courts15}}</td>
+                    </tr>
+                    <tr>
+                        <td class="regions-label">{{form.courts16.errors}}{{form.courts16.label_tag}}</td>
+                        <td> {{form.courts16}}</td>
+                    </tr>
+                    <tr>
+                        <td class="regions-label">{{form.courts17.errors}}{{form.courts17.label_tag}}</td>
+                        <td> {{form.courts17}}</td>
+                    </tr>
+                    <tr>
+                        <td class="regions-label">{{form.courts18.errors}}{{form.courts18.label_tag}}</td>
+                        <td> {{form.courts18}}</td>
+                    </tr>
+                </table>
+                <!--{% for courts in list_courts2 %}-->
+                <!--{{courts}}-->
+                <!--<option value="{{cid}}">{{court}}</option>-->
+                <!--{% endfor %}-->
+            </div>
+
+
+            <input type="submit" value="Отправить" class="btn btn-primary"/>
+            <span class="notes">* Обязательные поля</span>
+
+            <hr>
+
+            <div class="col-12 settings">
+                <h4>Настройки</h4>
+
+                <!--<div>{{form.results_filename_csv.errors}}-->
+                <!--{{ form.results_filename_csv.label_tag }} {{ form.results_filename_csv }}-->
+                <!--</div> -->
+                <div>{{form.results_filename_xlsx.errors}}
+                    {{ form.results_filename_xlsx.label_tag }} {{ form.results_filename_xlsx }}
+                </div>
+
+                <br>
+
+                <!--</div>-->
+                <!--<div class="col-xs-12 syssettings">-->
+                <!--<h4>Системные настройки</h4>-->
+                <div>{{form.save_documents.errors}}
+                    {{ form.save_documents.label_tag }} {{ form.save_documents }}
+                </div>
+                <div>{{form.directory_documents_save.errors}}
+                    {{ form.directory_documents_save.label_tag }} {{ form.directory_documents_save }}
+                </div>
+
+                <hr>
+
+                <div>{{form.webdriver_name.errors}}{{ form.webdriver_name.label_tag }} {{ form.webdriver_name }}
+                </div>
+                <div>{{form.useHeadlessBrowser.errors}}
+                    {{ form.useHeadlessBrowser.label_tag }} {{ form.useHeadlessBrowser }}
+                </div>
+
+                <br>
+
+                <div>{{form.RUCAPTCHA_KEY.errors}}{{ form.RUCAPTCHA_KEY.label_tag }} {{ form.RUCAPTCHA_KEY }}</div>
+                <div>{{form.captcha_image_path.errors}}
+                    {{ form.captcha_image_path.label_tag }} {{ form.captcha_image_path }}
+                </div>
+
+                <br>
+
+                <div>{{form.screenshot_path.errors}}
+                    {{ form.screenshot_path.label_tag }} {{ form.screenshot_path }}
+                </div>
+                <div>{{form.filename_list_courts.errors}}
+                    {{ form.filename_list_courts.label_tag }} {{ form.filename_list_courts }}
+                </div>
+                <br>
+                <div>{{form.delay_for_lag_of_start_form.errors}}
+                    {{ form.delay_for_lag_of_start_form.label_tag }} {{form.delay_for_lag_of_start_form }}
+                </div>
+                <div>{{form.cdelay.errors}}{{ form.cdelay.label_tag }} {{ form.cdelay }}</div>
+            </div>
+
+        </form>
+
+
+    </div>
+</div>
+<!--</div>-->
+
+
+</body>
+</html>
