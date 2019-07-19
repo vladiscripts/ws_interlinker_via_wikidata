@@ -14,6 +14,7 @@ import vladi_commons.lib_for_mwparserfromhell as mymwp
 import wiki_util
 # from wikidata import wiki_util
 from wd_utils import WD_utils, Props
+from get_other_sources_from_lua import get_other_sources
 # from vladi_commons.file_helpers import csv_save_dict_fromListWithHeaders, json_store_to_file, json_data_from_file
 # # from vladi_commons import vladi_helpers
 from vladi_commons.vladi_helpers import get_item_from_listdict
@@ -29,9 +30,10 @@ re_cat_redirect = re.compile(r'\[\[Категория:[^]]+?Перенаправ
 
 
 class Process:
-    works_pages_with_wditems = False  # работать со страницами только имеющими элемент ВД
+    works_pages_with_wditems = True  # работать со страницами только имеющими элемент ВД
     require_ruwiki_page_via_item = True  # пропускать страницы если у элемента темы нет страницы в ruwiki
     make_wd_links = False  # линковать ссылки ВД, иначе только удалять параметры дублирующие ВД
+    work_only_enc = False
     prj = 'ruwikisource'
     allowed_header_names = ['отексте', 'обавторе']
     enc_prefixes = []
@@ -39,108 +41,146 @@ class Process:
 
     # wikiprojects = parse_lua_to_dict(WS, 'projects')
     wikiprojects = ['ВИКИПЕДИЯ', ]
-    encyclopedies = ['ЭСБЕ', 'РСКД', ]
+    # encyclopedies = ['ЭСБЕ', 'РСКД', 'ВЭ']
+    encyclopedies = enc_prefixes
 
     is_author_tpl = bool
 
     # header_names = ['ОТЕКСТЕ', 'БСЭ1', 'БЭАН', 'БЭЮ', 'ВЭ', 'ГСС', 'ЕЭБЕ', 'МСР', 'МЭСБЕ', 'НЭС', 'ПБЭ', 'РБС',
     #                 'РСКД', 'РЭСБ', 'САР', 'ТСД1', 'ТСД2', 'ТСД3', 'ТЭ1', 'ЭЛ', 'ЭСБЕ', 'ЭСГ']
 
-    def __init__(self, as_bot=False, test_run=False):
-        self.as_bot = as_bot
+    def __init__(self, test_run=False):
+        self.as_bot = True
         self.test_run = test_run
-        self.wd = WD_utils(as_bot=as_bot, test_run=test_run)
-        self.get_other_sources()
+        self.wd = WD_utils(as_bot=self.as_bot, test_run=test_run)
+        get_other_sources(self)
         self.allowed_header_names.extend(self.enc_prefixes)
 
-    def get_other_sources(self):
-        def parse_lua_to_dict(WS, var_name):
-            k = {'otherSources': 'Модуль:Другие источники', 'projects': 'Модуль:Навигация-мини'}
-            lua_text = pywikibot.Page(WS, k[var_name])
-            other_sources_raw = re.search(var_name + r'\s*=\s*{'
-                                                     r'((?:\s*{[^}]+?},?\s*)+)'
-                                                     r'}', lua_text.text, flags=re.S | re.VERBOSE)
-            splitted = re.findall(r'\s*{([^}]+?)}(?:,\s|\s$)', other_sources_raw.group(1), flags=re.S | re.VERBOSE)
-            data = []
-            for params in splitted:
-                d = {}
-                pp = re.sub(r"(^|,)(\s*[^\s]+\s*=)", r'%#%\2', params, flags=re.S).split(
-                    '%#%')  # split с уст. врем. разделителя
-                for p in pp:
-                    if p.strip() != '':
-                        k, _, v = p.partition('=')
-                        key = k.strip('\t\n\r \'')
-                        value = v.strip('\t\n\r \'')
-                        d[key] = value
-                data.append(d)
-                # assert len(other_sources[0]) == 6
-            if not data:
-                raise Exception('Ошибка загрузки данных о словарях из Модуль:Другие источники')
-            return data
-
-        other_sources = parse_lua_to_dict(self.wd.WS, 'otherSources')
-        # wikiprojects = parse_lua_to_dict(self.wd.WD, 'projects')
-        for n in other_sources:
-            n['wditem'] = pywikibot.ItemPage(self.wd.WD, n['id'])
-            pname = n['argument']
-            self.wd.enc_meta[pname] = n
-            self.enc_prefixes.append(pname)
-
-    def author(self, params):
+    def author(self):
         # tpl_source_meta = get_item_from_listdict(other_sources, 'argument', tplname)
         # if not tpl_source_meta: continue
+        if not self.is_author_tpl: return
 
-        # сначала ВИКИДАННЫЕ
-        item_id = params.get('ВИКИДАННЫЕ')
-        if item_id:
-            if not self.itemWD:
-                # pval
-                # wd_item = pywikibot.ItemPage(WD, 'Q1057344')
-                self.itemWD = pywikibot.ItemPage(self.wd.WD, item_id)
-                self.itemWD.get()
-                self.itemWD.setSitelink(sitelink={'site': 'ruwikisource', 'title': title}, summary='Set sitelink')
-            else:
-                if self.itemWD.getSitelink('ruwikisource') == item_id:
-                    pass
+        pfuncmap = {
+            # 'ВИКИДАННЫЕ': self.param_Wikidata,  # сначала ВИКИДАННЫЕ
+            # 'ВИКИПЕДИЯ': self.param_Wikipedia,
+            # 'ИЗОБРАЖЕНИЕ': self.param_Image,
+        }
+        for param in self.tpl.params:
+            pname = param.name.strip()
+            pval = mymwp.get_param_value(self.tpl, pname)
+            if not pval: continue
 
-        # далее ВИКИПЕДИЯ
-        wp_value = params.get('ВИКИПЕДИЯ')
+            # сначала ВИКИДАННЫЕ
+            if pname == 'ВИКИДАННЫЕ':
+                item_id = pval
+                if self.itemWD:
+                    if self.itemWD.getSitelink('ruwikisource') == item_id:
+                        self.changed = mymwp.removeTplParameters(self.tpl, pname)  # очищаем параметр
+                else:
+                    # подключить элемент ВД
+                    self.itemWD = pywikibot.ItemPage(self.wd.WD, item_id)
+                    self.itemWD.get()
+                    self.itemWD.setSitelink(sitelink={'site': 'ruwikisource', 'title': self.title},
+                                            summary='Set sitelink')
 
-        for pname, pval in params.items():
-            if pname == 'ВИКИПЕДИЯ' and pval != '':
-                # link_lngcode = None
-                # link_pname = pval
-                # if ':' in pval:
-                #     link_lngcode, link_pname = pval.split(':')
-                # wpsite_tmp = pywikibot.Site(code=link_lngcode, fam='wikipedia')
-                # wp_page_tmp = pywikibot.Page(wpsite_tmp, link_pname)
-                # wp_page_item_tmp = wp_page_tmp.data_item()
-                # k = pywikibot.Link(pval)
+            if pname == 'ИЗОБРАЖЕНИЕ':
+                for c in self.itemWD.claims.get('P18'):  # 'preferred', 'normal'
+                    if c.target._link._text == pval:
+                        self.changed = mymwp.removeTplParameters(self.tpl, pname)  # очищаем параметр
 
-                lnk_tmp = pywikibot.Link(pval, source=self.wd.WP)
-                # lng_tmp = lnk_tmp.site
-                lang_tmp = lnk_tmp.parse_site()[1]
-                # lnk_tmp.canonical_title()
-
-                try:
-                    title_tmp = lnk_tmp.title
-                except pywikibot.exceptions.SiteDefinitionError:
-                    '''Вероятно нестандартный языковый код страницы'''
-                    continue
-
-                WP_tmp = pywikibot.Site(lang_tmp, 'wikipedia')
-                wp_page_tmp = pywikibot.Page(WP_tmp, link_pname)
-                wp_page_item_tmp = wp_page_tmp.data_item()
-
-                # WPt = pywikibot.Site(lng, 'wikipedia')
-                # pywikibot.Link(pval, source=WPt).title
-
-                # pywikibot.Link('Юлий Таубин', source=page)
-                # pywikibot.Link('Юлий Таубин', source=WP)
-                ws_topic_item = page.data_item()
-                # wp_topic_item = pywikibot.Page(WP, pval).data_item()
-                wp_topic_item = site_tmp.data_item()
                 print()
+
+            # if pname == 'ВИКИПЕДИЯ':
+
+        # # различаются значения в ручном параметре и в ВД
+        # self.itemWD.sitelinks.get('ruwikisource')
+        # pass
+        # # # очистить значение ВИКИПЕДИЯ
+        # # # linksWD = self.get_wd_links()
+        # # # if self.wdlink(m_itemId, linksWD):
+        # if self.wdlink_():
+        #     # mymwp.param_value_clear(tpl, param)
+        #     pass
+        #     return True
+
+        #     if pname in pfuncmap.keys() or pname in self.encyclopedies:
+        #         pval = mymwp.get_param_value(self.tpl, pname)
+        #         if not pval: continue
+        #         cleanParam = False
+        #
+        #         # параметры проектов
+        #         if pname in pfuncmap.keys():
+        #             func = pfuncmap.get(pname)
+        #             cleanParam = func(pname, pval)
+        #
+        #         # параметры словарей
+        #         # elif pname in self.encyclopedies:
+        #         #     r = self.param_encyclopedia(pname, pval)
+        #         #     pass
+        #
+        #         # очищаем параметр
+        #         if cleanParam and not self.test_run:
+        #             # mymwp.param_value_clear(self.tpl, pname, new_val='\n')
+        #             mymwp.removeTplParameters(self.tpl, pname)
+        #             changed = True
+        #
+        # if changed:
+        #     wiki_util.page_posting(self.page, str(self.wikicode), self.test_run)
+
+        #
+        #
+        # # сначала ВИКИДАННЫЕ
+        # item_id = params.get('ВИКИДАННЫЕ')
+        # if item_id:
+        #     if not self.itemWD:
+        #         # pval
+        #         # wd_item = pywikibot.ItemPage(WD, 'Q1057344')
+        #         self.itemWD = pywikibot.ItemPage(self.wd.WD, item_id)
+        #         self.itemWD.get()
+        #         self.itemWD.setSitelink(sitelink={'site': 'ruwikisource', 'title': title}, summary='Set sitelink')
+        #     else:
+        #         if self.itemWD.getSitelink('ruwikisource') == item_id:
+        #             pass
+        #
+        # # далее ВИКИПЕДИЯ
+        # wp_value = params.get('ВИКИПЕДИЯ')
+        #
+        # for pname, pval in params.items():
+        #     if pname == 'ВИКИПЕДИЯ' and pval != '':
+        #         # link_lngcode = None
+        #         # link_pname = pval
+        #         # if ':' in pval:
+        #         #     link_lngcode, link_pname = pval.split(':')
+        #         # wpsite_tmp = pywikibot.Site(code=link_lngcode, fam='wikipedia')
+        #         # wp_page_tmp = pywikibot.Page(wpsite_tmp, link_pname)
+        #         # wp_page_item_tmp = wp_page_tmp.data_item()
+        #         # k = pywikibot.Link(pval)
+        #
+        #         lnk_tmp = pywikibot.Link(pval, source=self.wd.WP)
+        #         # lng_tmp = lnk_tmp.site
+        #         lang_tmp = lnk_tmp.parse_site()[1]
+        #         # lnk_tmp.canonical_title()
+        #
+        #         try:
+        #             title_tmp = lnk_tmp.title
+        #         except pywikibot.exceptions.SiteDefinitionError:
+        #             '''Вероятно нестандартный языковый код страницы'''
+        #             continue
+        #
+        #         WP_tmp = pywikibot.Site(lang_tmp, 'wikipedia')
+        #         wp_page_tmp = pywikibot.Page(WP_tmp, link_pname)
+        #         wp_page_item_tmp = wp_page_tmp.data_item()
+        #
+        #         # WPt = pywikibot.Site(lng, 'wikipedia')
+        #         # pywikibot.Link(pval, source=WPt).title
+        #
+        #         # pywikibot.Link('Юлий Таубин', source=page)
+        #         # pywikibot.Link('Юлий Таубин', source=WP)
+        #         ws_topic_item = page.data_item()
+        #         # wp_topic_item = pywikibot.Page(WP, pval).data_item()
+        #         wp_topic_item = site_tmp.data_item()
+        #         print()
 
         # for pname, pval in params.items():
         #     if pval == '': continue
@@ -184,6 +224,7 @@ class Process:
 
     def init_page(self, page):
         self.page = page
+        self.changed = False
         # self.page = pywikibot.Page(self.wd.WS, title)
         # todo:  if not page.revisions[0].patroled.since >= 5days: return
 
@@ -192,18 +233,18 @@ class Process:
             return
 
         self.itemWD = self.wd.get_item(self.wd.WS, page=self.page)
-
         if self.works_pages_with_wditems and not self.itemWD:
             return
 
         # работать по энциклопедическая статья и словарная статья
-        for e in self.itemWD.claims.get(Props.item_type, []):
-            if e.target.id not in Props.types_to_search:
-                return
+        if self.work_only_enc:
+            for e in self.itemWD.claims.get(Props.item_type, []):
+                if e.target.id not in Props.types_to_search:
+                    return
 
-        title = page.title()
-        self.rootpagename, self.pagename = wiki_util.parse_pagename(title)
-        print(title)
+        self.title = page.title()
+        self.rootpagename, self.pagename = wiki_util.parse_pagename(self.title)
+        print(self.title)
 
         text = self.page.get()
         self.wikicode = mwp.parse(text)
@@ -212,9 +253,12 @@ class Process:
                 if tpl.name.strip().lower() == allowed_header_name.lower():
                     self.tpl = tpl
                     self.tplname = tpl.name.strip()
-                    self.is_author_tpl = self.tplname.lower() == 'обавторе'
+                    self.is_author_tpl = (self.tplname.lower() == 'обавторе')
 
                     self.tpl_process()
+
+        if self.changed:
+            wiki_util.page_posting(self.page, str(self.wikicode), self.test_run)
 
     # def author_despatcher(self, params):
     # def despatcher_tpl(self, tplname, params):
@@ -254,37 +298,49 @@ class Process:
         pfuncmap = {
             # 'ВИКИДАННЫЕ': self.param_Wikidata,  # сначала ВИКИДАННЫЕ
             'ВИКИПЕДИЯ': self.param_Wikipedia,
+            # 'ИЗОБРАЖЕНИЕ': self.param_Image,
         }
+
+        # if self.is_author_tpl:
+        #     self.author()
+
         for param in self.tpl.params:
             pname = param.name.strip()
+            if not (pname in pfuncmap.keys() or pname in self.encyclopedies): continue
+            pval = mymwp.get_param_value(self.tpl, pname)
+            if not pval: continue
+            cleanParam = False
 
-            if pname in pfuncmap.keys() or pname in self.encyclopedies:
-                pval = mymwp.get_param_value(self.tpl, pname)
-                if not pval: continue
-                cleanParam = False
+            if not self.is_author_tpl and pname == self.rootpagename:
+                # параметр дублирует rootpagename
+                cleanParam = True
 
-                # параметры проектов
-                if pname in pfuncmap.keys():
-                    func = pfuncmap.get(pname)
-                    cleanParam = func(pname, pval)
+            # параметры проектов
+            elif pname in pfuncmap.keys():
+                # func = pfuncmap.get(pname)
+                # cleanParam = func(pname, pval)
+                pass
 
-                # параметры словарей
-                # elif pname in self.encyclopedies:
-                #     r = self.param_encyclopedia(pname, pval)
-                #     pass
+            # параметры словарей
+            elif pname in self.encyclopedies:
+                cleanParam = self.param_encyclopedia(pname, pval)
+                pass
 
-                # очищаем параметр
-                if cleanParam and not self.test_run:
-                    # mymwp.param_value_clear(self.tpl, pname, new_val='\n')
-                    mymwp.removeTplParameters(self.tpl, pname)
-                    changed = True
+            # очищаем параметр
+            if cleanParam and not self.test_run:
+                # mymwp.param_value_clear(self.tpl, pname, new_val='\n')
+                mymwp.removeTplParameters(self.tpl, pname)
+                changed = True
 
         if changed:
             wiki_util.page_posting(self.page, str(self.wikicode), self.test_run)
 
     def param_encyclopedia(self, pname, m_enc):
+        """ done для авторов
+        """
         tpl = self.tpl
-        pagename_enc = self.other_sources_d[pname]['argument'].replace('$1', m_enc)
+        # pagename_enc = self.wd.enc_meta[pname]['argument'].replace('$1', m_enc)
+        pagename_enc = self.wd.enc_meta[pname]['titleVT'].replace('$1', m_enc)
         # param = 'ВИКИПЕДИЯ'
         # m_item_id = mymwp.param_value_or_none(tpl, param)
         # if m_item_id:
@@ -292,56 +348,75 @@ class Process:
         # if not self.itemWD:
         # if prj in wd_item.sitelinks and wd_item.getSitelink(prj) != self.page.title:
 
-        if self.itemWD:
-            # todo исключить страницы /ДО
+        if not self.itemWD:
+            return
 
-            # в ВД другое значение
+        # todo исключить страницы /ДО
+        # todo: ручная ссылка без статьи и ВД - Всеволод Михайлович Гаршин
+
+        # в ВД другое значение
+        # if self.is_author_tpl:
+
+        # if not prj in self.wd_item.sitelinks:
+        # enc_article_item.setSitelink(sitelink={'site': prj, 'title': title}, summary='sitelink')
+        pass
+
+        # # проверяем запись и очищаем параметр
+        # if enc_article_item.getSitelink(self.prj) == self.page.title():
+        #     r = True
+        #     # mymwp.param_value_clear(tpl, param)
+
+        # else:
+        # подключаем указанный в ручную item
+        # todo: исключить страницы /ДО, перенаправления, страницы произведений не энциклопедий
+
+        wdlinks = self.wd.get_links(self.itemWD, self.is_author_tpl)
+        # topic_item_id = wdlinks[0] if len(wdlinks) == 1 else None  # todo: проверить [0] или все links
+        topic_item = wdlinks[0] if wdlinks else None  # todo: проверить [0] или все links
+
+        # m_enc = 'Q1057344'
+        # enc_article_item = self.wd.get_item(self.wd.WS, title=m_enc)
+        enc_article_item = self.wd.get_item(self.wd.WS, title=pagename_enc)
+
+        if topic_item and enc_article_item:
+            topic_item.get()
+            # todo создаёт дубли, или это было из-за повторного использования вд-свойствв
             if self.is_author_tpl:
-                # if not prj in self.wd_item.sitelinks:
-                # enc_article_item.setSitelink(sitelink={'site': prj, 'title': title}, summary='sitelink')
-                pass
-
-                # # проверяем запись и очищаем параметр
-                # if enc_article_item.getSitelink(self.prj) == self.page.title():
-                #     r = True
-                #     # mymwp.param_value_clear(tpl, param)
-
+                if not self.wd.id_in_item_describes(pname, enc_article_item.id, self.itemWD):
+                    self.wd.add_article_in_subjectitem(pname, self.itemWD, enc_article_item)
+                if self.wd.id_in_item_describes(pname, enc_article_item.id, self.itemWD):
+                    # очистить значение ВИКИДАННЫЕ
+                    return True
             else:
-                # подключаем указанный в ручную item
-                # todo: исключить страницы /ДО, перенаправления, страницы произведений не энциклопедий
 
-                wdlinks = self.wd.get_links(self.itemWD, self.is_author_tpl)
-                topic_item = wdlinks[0] if len(wdlinks) == 1 else None
+                if not self.wd.id_in_item_describes(pname, enc_article_item.id, topic_item):
+                    self.wd.add_article_in_subjectitem(pname, topic_item, enc_article_item)
+                if not self.wd.id_in_item_describes(pname, enc_article_item.id, topic_item):
+                    # очистить значение ВИКИДАННЫЕ
+                    return True
 
-                # m_enc = 'Q1057344'
-                enc_article_item = self.wd.get_item(self.wd.WS, m_enc)
+            # # проверяем запись и очищаем параметр
+            # linksWD = [i.id for i in self.wd_item.claims.get(Props.main_subject)]
+            # if m_item_id in linksWD:
+            #     r = True
+            #     # mymwp.param_value_clear(tpl, param)
 
-                if topic_item and enc_article_item:
-
-                    self.wd.add_article_in_subjectitem(topic_item, pname, enc_article_item)
-
-                    # # проверяем запись и очищаем параметр
-                    # linksWD = [i.id for i in self.wd_item.claims.get(Props.main_subject)]
-                    # if m_item_id in linksWD:
-                    #     r = True
-                    #     # mymwp.param_value_clear(tpl, param)
-
-                    self.itemWD = self.page.data_item()
-                    self.itemWD.get()
-
-                    # linksWD = self.get_wd_links()
-                    # if not linksWD:
-                    if not self.wd.link_():
-                        # self.wd.join_items_article_and_subject(pname, m_enc, self.itemWD)
-                        pass
-
-                    # if self.wdlink(m_item_id, linksWD):
-                    if self.wd.link_():
-                        # очистить значение ВИКИДАННЫЕ
-                        return True
-                    else:
-                        # различаются значения в ручном параметре и в ВД
-                        pass
+            # self.itemWD = self.page.data_item()
+            # self.itemWD.get()
+            #
+            # # linksWD = self.get_wd_links()
+            # # if not linksWD:
+            # if not self.wd.link_():
+            #     # self.wd.join_items_article_and_subject(pname, m_enc, self.itemWD)
+            #     pass
+            #
+            # # if self.wdlink(m_item_id, linksWD):
+            # if self.wd.link_():
+            #     # очистить значение ВИКИДАННЫЕ
+            #     return True
+            # else:
+            #     # различаются значения в ручном параметре и в ВД
+            #     pass
 
     def param_Wikipedia(self, pname, m_wp_pagename_raw):
         tpl = self.tpl
@@ -359,15 +434,15 @@ class Process:
 
             if self.is_author_tpl:
                 # различаются значения в ручном параметре и в ВД
-                # self.itemWD.sitelinks.get('ruwikisource')
+                self.itemWD.sitelinks.get('ruwikisource')
                 pass
                 # # очистить значение ВИКИПЕДИЯ
                 # # linksWD = self.get_wd_links()
                 # # if self.wdlink(m_itemId, linksWD):
-                # if self.wdlink_():
-                #     # mymwp.param_value_clear(tpl, param)
-                #     pass
-                #     return True
+                if self.wdlink_():
+                    # mymwp.param_value_clear(tpl, param)
+                    pass
+                    return True
 
             else:
                 # очистить значение ВИКИПЕДИЯ
@@ -489,9 +564,53 @@ class Process:
             #     pass
             # # # else:
 
+    def param_author_Image(self, pname, pvalue):
+        tpl = self.tpl
+        # pname = 'ИЗОБРАЖЕНИЕ'
+        if self.itemWD:
+            # WP, m_wp_pagename = self.wd.get_WPsite(pvalue)
+            # if not WP:
+            #     return
+
+            m_wp_page_item = self.wd.get_item(WP, title=m_wp_pagename)
+            if not m_wp_page_item:
+                return
+            if self.require_ruwiki_page_via_item and not m_wp_page_item.sitelinks.get('ruwiki'):
+                return
+
+            if self.is_author_tpl:
+                # различаются значения в ручном параметре и в ВД
+                self.itemWD.sitelinks.get('ruwikisource')
+                pass
+                # # очистить значение ВИКИПЕДИЯ
+                # # linksWD = self.get_wd_links()
+                # # if self.wdlink(m_itemId, linksWD):
+                if self.wdlink_():
+                    # mymwp.param_value_clear(tpl, param)
+                    pass
+                    return True
+
+            else:
+                # очистить значение ВИКИПЕДИЯ
+                if self.wd.param_value_equal_item(self.rootpagename, m_wp_pagename, self.itemWD, m_wp_page_item):
+                    return True
+
+                if self.make_wd_links:
+                    # todo слишком общие страницы в ВИКИПЕДИЯ, не имеет смысла их связывать с элементом
+                    # добавить свойство "основная тема"
+                    if not self.wd.id_in_item_topics(m_wp_page_item.id, self.itemWD):
+                        self.wd.add_main_subject(self.itemWD, item=m_wp_page_item)
+                    # todo создаёт дубли, или это было из-за повторного использования вд-свойствв
+                    if not self.wd.id_in_item_describes(self.rootpagename, self.itemWD.id, m_wp_page_item):
+                        self.wd.add_article_in_subjectitem(self.rootpagename, m_wp_page_item, self.itemWD)
+
+                    # очистить значение ВИКИПЕДИЯ
+                    if self.wd.param_value_equal_item(self.rootpagename, m_wp_pagename, self.itemWD, m_wp_page_item):
+                        return True
+
 
 if __name__ == '__main__':
-    d = Process(as_bot=False, test_run=False)
+    d = Process(test_run=False)
     # pywikibot.Site().login()
     d.works_pages_with_wditems = True
     # ТЭ1/
@@ -509,8 +628,6 @@ if __name__ == '__main__':
     # pages = ['Владимир Щербаненко']
     # pages = ['Юлий Таубин']
 
-
-
     # Pages generator
     # wiki_util.get_pages(tpl_names, test_pages = None, is_test_run = False)
     base_args = ['-family:wikisource', '-lang:ru',
@@ -521,11 +638,27 @@ if __name__ == '__main__':
     # без кавычек
     args = [
         '-cat:Викитека:Ручная ссылка:Википедия',
-        '-cat:Викитека:Ссылка из Викиданных:Викитека',
+        '-cat:Викитека:Ссылка из Викиданных:Викитека',  # страница имеет itemWD
         #     '-catr:"Категория:РБС:Поэты"',
         #     '-cat:РБС:Поэты',
         # '-page:МЭСБЕ/Аахен',
         # '-page:ЭСБЕ/Венецуэла',
+        # '-titleregex:(%s)' % '|'.join(d.enc_prefixes)
+    ]
+    # from pywikibot import pagegenerators
+    # query = """SELECT ?item ?sitelink WHERE {
+    #     ?item wdt:P31 wd:Q17329259.
+    #     ?sitelink schema:isPartOf <https://ru.wikisource.org/>;
+    #      schema:about ?item.
+    #     SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],ru" }
+    #     }
+    #     LIMIT 300"""
+    # generator = pagegenerators.WikidataSPARQLPageGenerator(query, site=wikidata_site)
+    args = [
+        # '-cat:Авторы:Ручная ссылка:Изображение:Совпадает со ссылкой из Викиданных',
+        # '-cat:Авторы:Ручная ссылка:ВЭ:Совпадает со ссылкой из Викиданных',  # done
+        '-cat:Викитека:Ручная ссылка совпадает со ссылкой из Викиданных:БСЭ1',  # done
+        # '-cat:Викитека:Ссылка из Викиданных:Викитека',  # страница имеет itemWD
         # '-titleregex:(%s)' % '|'.join(d.enc_prefixes)
     ]
     gen = wiki_util.get_pages(base_args, args, intersect=True)

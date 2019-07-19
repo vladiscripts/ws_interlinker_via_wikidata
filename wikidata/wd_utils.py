@@ -41,7 +41,7 @@ class WD_utils:
 
     def get_links(self, itemWD, is_author_tpl):
         if is_author_tpl:
-            wd_item_ids = [itemWD.id]
+            wd_item_ids = [itemWD]
         else:
             wd_item_ids = [i.target for i in itemWD.claims.get(Props.topic_subject, [])]
         return wd_item_ids
@@ -65,7 +65,7 @@ class WD_utils:
                 return True
 
     def link_(self, item_id: str = None, title: str = None):
-        items = self.get_links()
+        items = self.get_links(itemWD, is_author_tpl)
         if item_id:
             for i in items:
                 if i.id == item_id:
@@ -141,7 +141,9 @@ class WD_utils:
             if item_id:
                 item = pwb.ItemPage(site, item_id)
             elif title:
+                # page = pwb.Page(site, title)
                 page = pwb.Page(site, title)
+                # item = page.data_item()
                 item = page.data_item()
             elif page:
                 item = page.data_item()
