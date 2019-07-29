@@ -78,7 +78,7 @@ class Process:
             'ИЗОБРАЖЕНИЕ': self.param_Image,
         }
 
-    def init_page(self, page):
+    def process_page(self, page):
         if page.isRedirectPage(): return
         p = PageMeta(page)
 
@@ -125,7 +125,7 @@ class Process:
                         return
 
                 # if p.is_author_tpl is None: return
-                p = self.params_process(p)
+                p = self.process_params(p)
 
                 if p.params_to_delete:
                     # очищаем параметры
@@ -133,7 +133,7 @@ class Process:
                     wiki_util.page_posting(p.page, str(wikicode), self.test_run)
                 break
 
-    def params_process(self, p):
+    def process_params(self, p):
         # if p.is_author_tpl:
         #     self.author()
 
