@@ -6,14 +6,14 @@ import json
 from lxml.html import fromstring
 import re
 from urllib.parse import urlencode, urlparse, parse_qs, parse_qsl, unquote, quote
-# from vladi_commons import vladi_helpers
-# from vladi_commons.file_helpers import csv_save_dict_fromListWithHeaders, json_store_to_file, json_data_from_file
+# from vladi_helpers import vladi_helpers
+# from vladi_helpers.file_helpers import csv_save_dict_fromListWithHeaders, json_store_to_file, json_data_from_file
 from typing import Iterable, Union
 import pywikibot as pwb
 from pywikibot.page import ItemPage
 import copy
 # import mwparserfromhell as mwp
-import vladi_commons.lib_for_mwparserfromhell as mymwp
+import vladi_helpers.lib_for_mwparserfromhell as mymwp
 
 
 class Props:
@@ -22,16 +22,24 @@ class Props:
     topic_subject = 'P921'  # основная тема
     described_by_source = 'P1343'  # описывается в источниках
     dedicated_article = 'P805'  # тема утверждения
+    disambig = 'Q4167410'  # дизамбиг, страница значений в проекте Викимедиа
+
+    sites = {
+        'ruwikisource': pwb.Site('ru', 'wikisource', user='TextworkerBot'),
+        'ruwikipedia': pwb.Site('ru', 'wikipedia', user='TextworkerBot'),
+    }
+    WS = sites['ruwikisource']
+    WP = sites['ruwikipedia']
+    WD = WS.data_repository()
+
+
+props = Props()
 
 
 class WD_utils:
-    WS = pwb.Site('ru', 'wikisource')
-    WP = pwb.Site('ru', 'wikipedia')
-    WD = WS.data_repository()
-
-    _claim_main_subject = pwb.Claim(WD, Props.topic_subject)
-    _claim_described_by_source = pwb.Claim(WD, Props.described_by_source)
-    _claim_dedicated_article = pwb.Claim(WD, Props.dedicated_article)
+    _claim_main_subject = pwb.Claim(props.WD, props.topic_subject)
+    _claim_described_by_source = pwb.Claim(props.WD, props.described_by_source)
+    _claim_dedicated_article = pwb.Claim(props.WD, props.dedicated_article)
 
     enc_meta = {}
 
@@ -39,12 +47,8 @@ class WD_utils:
         self.as_bot = as_bot
         self.test_run = test_run
 
-    def get_links(self, itemWD, is_author_tpl):
-        if is_author_tpl:
-            wd_item_ids = [itemWD]
-        else:
-            wd_item_ids = [i.target for i in itemWD.claims.get(Props.topic_subject, [])]
-        return wd_item_ids
+    def get_topic_items(self, itemWD):
+        return [i.target for i in itemWD.claims.get(props.topic_subject, []) if isinstance(i.target, ItemPage)]
 
     def claim_main_subject(self):
         # return pwb.Claim(self.WD, Props.topic_subject)
@@ -65,7 +69,7 @@ class WD_utils:
                 return True
 
     def link_(self, item_id: str = None, title: str = None):
-        items = self.get_links(itemWD, is_author_tpl)
+        items = self.get_items(itemWD, is_author_tpl)
         if item_id:
             for i in items:
                 if i.id == item_id:
@@ -74,14 +78,14 @@ class WD_utils:
     def id_in_item_describes(self, rootpagename: str, search_id: str, item: ItemPage) -> bool:
         enc_item = self.enc_meta[rootpagename]['wditem']
         if enc_item:
-            for c in item.claims.get(Props.described_by_source, []):
+            for c in item.claims.get(props.described_by_source, []):
                 if enc_item.id == c.target.id:
-                    for q in c.qualifiers.get(Props.dedicated_article, []):
+                    for q in c.qualifiers.get(props.dedicated_article, []):
                         if q.target.id == search_id:
                             return True
 
     def id_in_item_topics(self, search_id: str, item: ItemPage) -> bool:
-        for i in item.claims.get(Props.topic_subject, []):
+        for i in item.claims.get(props.topic_subject, []):
             if i.target.id == search_id:
                 return True
 
@@ -91,6 +95,11 @@ class WD_utils:
                 and self.id_in_item_topics(m_wp_page_item.id, itemWD):
             print(f'значение параметра ("{m_wp_pagename}") совпадает с item (label {m_wp_page_item.labels.get("ru")})')
             return True
+
+    # def is_item_of_disambig(self, item: ItemPage) -> bool:
+    #     for e in item.claims.get(props.item_type, []):
+    #         if e.target and e.target.id == props.disambig:
+    #             return True
 
     def _join_items_article_and_subject(self, pname: str, subject_item_id: str, target_item: ItemPage):
         # создать ссылку на элемент темы
@@ -103,9 +112,9 @@ class WD_utils:
     def add_main_subject(self, itemWD: ItemPage, item_id: str = None, item: ItemPage = None):
         """ создать ссылку на элемент темы """
         claim_topic_subject = self.claim_main_subject()
-        pwb.Claim(self.WD, Props.topic_subject)
+        pwb.Claim(props.WD, props.topic_subject)
         if item_id:
-            wditem_subject = pwb.ItemPage(self.WD, item_id)
+            wditem_subject = pwb.ItemPage(props.WD, item_id)
         elif item:
             wditem_subject = item
         else:
@@ -114,7 +123,7 @@ class WD_utils:
         claim_topic_subject.setTarget(wditem_subject)
         if self.test_run:
             return
-        itemWD.addClaim(claim_topic_subject, bot=self.as_bot, summary='add main subject')
+        itemWD.addClaim(claim_topic_subject, bot=self.as_bot, summary='+main subject; moved from ruwikisource')
         print(f'add main subject in item')
 
     def add_article_in_subjectitem(self, rootpagename: str,
@@ -132,7 +141,8 @@ class WD_utils:
         claim_described_by.addQualifier(qualifier)
         if self.test_run:
             return
-        subject_item.addClaim(claim_described_by, bot=self.as_bot, summary='add dedicated_article')
+        subject_item.addClaim(claim_described_by, bot=self.as_bot,
+                              summary='+described by source; moved from ruwikisource')
         print(f'add item of article in subject item')
 
     def get_item(self, site, item_id: str = None, title: str = None, page=None):
@@ -141,9 +151,7 @@ class WD_utils:
             if item_id:
                 item = pwb.ItemPage(site, item_id)
             elif title:
-                # page = pwb.Page(site, title)
                 page = pwb.Page(site, title)
-                # item = page.data_item()
                 item = page.data_item()
             elif page:
                 item = page.data_item()
@@ -153,13 +161,16 @@ class WD_utils:
         return item
 
     def get_WPsite(self, pagename_raw):
-        lnk_tmp = pwb.Link(pagename_raw, source=self.WP)
+        # .target.title(with_ns=False)
+        lnk_tmp = pwb.Link(pagename_raw, source=props.WP)
         lang_tmp = lnk_tmp.parse_site()[1]
-
         try:
             title_tmp = lnk_tmp.title
         except pwb.exceptions.SiteDefinitionError:
             '''Вероятно нестандартный языковый код страницы'''
-            return
-        WP = self.WP if lang_tmp == 'ru' else pwb.Site(lang_tmp, 'wikipedia')
+            return None, None
+        # WP = self.WP if lang_tmp == 'ru' else pwb.Site(lang_tmp, 'wikipedia')
+        WP = props.sites.get(lang_tmp + 'wikipedia')
+        if not WP:
+            WP = props.sites[lang_tmp + 'wikipedia'] = pwb.Site(lang_tmp, 'wikipedia')
         return WP, title_tmp

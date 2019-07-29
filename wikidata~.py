@@ -10,14 +10,14 @@ import re
 from typing import Iterable, Union
 import pywikibot
 import mwparserfromhell as mwp
-import vladi_commons.lib_for_mwparserfromhell as mymwp
+import vladi_helpers.lib_for_mwparserfromhell as mymwp
 import wiki_util
 # from wikidata import wiki_util
-from wd_utils import WD_utils, Props
+from wd_utils import WD_utils, props
 from get_other_sources_from_lua import get_other_sources
-# from vladi_commons.file_helpers import csv_save_dict_fromListWithHeaders, json_store_to_file, json_data_from_file
-# # from vladi_commons import vladi_helpers
-from vladi_commons.vladi_helpers import get_item_from_listdict
+# from vladi_helpers.file_helpers import csv_save_dict_fromListWithHeaders, json_store_to_file, json_data_from_file
+# # from vladi_helpers import vladi_helpers
+from vladi_helpers.vladi_helpers import get_item_from_listdict
 
 """Перенос ссылок на энциклопедии/словари из статей в Викиданые и создание там записи."""
 re_cat_redirect = re.compile(r'\[\[Категория:[^]]+?Перенаправления', flags=re.IGNORECASE)
@@ -223,8 +223,7 @@ class Process:
         #                     # print(claim.sources[0])
 
     def init_page(self, page):
-        self.page = page
-        self.changed = False
+        self.p = PageMeta(page)
         # self.page = pywikibot.Page(self.wd.WS, title)
         # todo:  if not page.revisions[0].patroled.since >= 5days: return
 
@@ -232,33 +231,39 @@ class Process:
         if re_cat_redirect.search(page.text):
             return
 
-        self.itemWD = self.wd.get_item(self.wd.WS, page=self.page)
+        self.itemWD = self.wd.get_item(self.wd.WS, page=self.p.page)
         if self.works_pages_with_wditems and not self.itemWD:
             return
 
         # работать по энциклопедическая статья и словарная статья
         if self.work_only_enc:
-            for e in self.itemWD.claims.get(Props.item_type, []):
-                if e.target.id not in Props.types_to_search:
+            for e in self.itemWD.claims.get(props.item_type, []):
+                if e.target.id not in props.types_to_search:
                     return
 
-        self.title = page.title()
-        self.rootpagename, self.pagename = wiki_util.parse_pagename(self.title)
-        print(self.title)
+        self.p.title = page.title()
+        self.p.rootpagename, self.p.pagename = wiki_util.parse_pagename(self.p.title)
+        print(self.p.title)
 
-        text = self.page.get()
-        self.wikicode = mwp.parse(text)
-        for tpl in self.wikicode.filter_templates():
+        text = self.p.page.get()
+        wikicode = mwp.parse(text)
+        for tpl in wikicode.filter_templates():
             for allowed_header_name in self.allowed_header_names:
                 if tpl.name.strip().lower() == allowed_header_name.lower():
-                    self.tpl = tpl
-                    self.tplname = tpl.name.strip()
-                    self.is_author_tpl = (self.tplname.lower() == 'обавторе')
 
-                    self.tpl_process()
+                    import author_tpl
+                    author_tpl.tpl_process(self)
+
+                    self.p.set_tpl(tpl)
+                    if self.p.is_author_tpl:
+                        author.params_process(self.p)
+                    elif not self.p.is_author_tpl:
+                        d.tpl_process()
+                    else:
+                        return
 
         if self.changed:
-            wiki_util.page_posting(self.page, str(self.wikicode), self.test_run)
+            wiki_util.page_posting(self.page, str(wikicode), self.test_run)
 
     # def author_despatcher(self, params):
     # def despatcher_tpl(self, tplname, params):
@@ -370,7 +375,7 @@ class Process:
         # подключаем указанный в ручную item
         # todo: исключить страницы /ДО, перенаправления, страницы произведений не энциклопедий
 
-        wdlinks = self.wd.get_links(self.itemWD, self.is_author_tpl)
+        wdlinks = self.wd.get_items(self.itemWD, self.is_author_tpl)
         # topic_item_id = wdlinks[0] if len(wdlinks) == 1 else None  # todo: проверить [0] или все links
         topic_item = wdlinks[0] if wdlinks else None  # todo: проверить [0] или все links
 
@@ -529,7 +534,7 @@ class Process:
                 # todo: исключить страницы /ДО, перенаправления, страницы произведений не энциклопедий
                 # self.wd_item.addClaim.claims.get(Props.main_subject)
 
-                claim = pywikibot.Claim(self.wd.WD, Props.topic_subject)
+                claim = pywikibot.Claim(self.wd.WD, props.topic_subject)
                 target = pywikibot.ItemPage(self.wd.WD, m_item_id)
                 claim.setTarget(target)
                 # m_item.addClaim(claim, bot=self.as_bot, summary='add main subject')
@@ -609,12 +614,75 @@ class Process:
                         return True
 
 
+class PageMeta:
+    changed = False
+    page = None
+    title = str
+    rootpagename = str
+    pagename = str
+    tpl = None
+    tplname = str
+    is_author_tpl = bool
+
+    def __init__(self, page):
+        self.title = page.title()
+        self.rootpagename, self.pagename = wiki_util.parse_pagename(self.title)
+
+    def set_tpl(self, tpl):
+        self.tpl = tpl
+        self.tplname = tpl.name.strip()
+        self.is_author_tpl = (self.tplname.lower() == 'обавторе')
+
+
+def init_page(page):
+    p = PageMeta(page)
+
+    # self.page = pywikibot.Page(self.wd.WS, title)
+    # todo:  if not page.revisions[0].patroled.since >= 5days: return
+
+    # пропускать страницы-перенаправления
+    if re_cat_redirect.search(page.text):
+        return
+
+    p.itemWD = d.wd.get_item(d.wd.WS, page=p.page)
+    if d.works_pages_with_wditems and not d.itemWD:
+        return
+
+    # работать по энциклопедическая статья и словарная статья
+    if d.work_only_enc:
+        for e in p.itemWD.claims.get(props.item_type, []):
+            if e.target.id not in props.types_to_search:
+                return
+
+    print(d.title)
+
+    text = p.page.get()
+    d.wikicode = mwp.parse(text)
+    for tpl in d.wikicode.filter_templates():
+        for allowed_header_name in d.allowed_header_names:
+            if tpl.name.strip().lower() == allowed_header_name.lower():
+                p.set_tpl(tpl)
+                if p.is_author_tpl:
+                    author.params_process(d)
+                elif not p.is_author_tpl:
+                    d.tpl_process()
+                else:
+                    return
+
+    if p.changed:
+        wiki_util.page_posting(p.page, str(d.wikicode), d.test_run)
+
+
 if __name__ == '__main__':
     d = Process(test_run=False)
     # pywikibot.Site().login()
     d.works_pages_with_wditems = True
-    # ТЭ1/
 
+    import author_tpl
+
+    author = author_tpl.Author(d)
+
+    # ТЭ1/
     pages = ['РСКД/Salarium', ]
     pages = ['МЭСБЕ/Дионис', ]
     # pages = ['БСЭ1/А']
@@ -664,4 +732,5 @@ if __name__ == '__main__':
     gen = wiki_util.get_pages(base_args, args, intersect=True)
     # pages = tuple(p.title() for p in gen)
     for page in gen:
-        d.init_page(page)
+        # d.init_page(page)
+        init_page(d, page)

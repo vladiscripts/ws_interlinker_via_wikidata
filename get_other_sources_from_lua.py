@@ -2,9 +2,10 @@
 # coding: utf-8
 import re
 import pywikibot
+from wd_utils import props
 
 
-def get_other_sources(cl):
+def get_other_sources():
     def parse_lua_to_dict(WS, var_name):
         k = {'otherSources': 'Модуль:Другие источники', 'projects': 'Модуль:Навигация-мини'}
         lua_text = pywikibot.Page(WS, k[var_name])
@@ -29,10 +30,11 @@ def get_other_sources(cl):
             raise Exception('Ошибка загрузки данных о словарях из Модуль:Другие источники')
         return data
 
-    other_sources = parse_lua_to_dict(cl.wd.WS, 'otherSources')
+    other_sources = parse_lua_to_dict(props.WS, 'otherSources')
     # wikiprojects = parse_lua_to_dict(self.wd.WD, 'projects')
+    enc_meta = {}
     for n in other_sources:
-        n['wditem'] = pywikibot.ItemPage(cl.wd.WD, n['id'])
+        n['wditem'] = pywikibot.ItemPage(props.WD, n['id'])
         pname = n['argument']
-        cl.wd.enc_meta[pname] = n
-        cl.enc_prefixes.append(pname)
+        enc_meta[pname] = n
+    return enc_meta
