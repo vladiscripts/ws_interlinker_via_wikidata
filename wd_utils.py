@@ -16,7 +16,7 @@ import copy
 import vladi_helpers.lib_for_mwparserfromhell as mymwp
 
 
-class Props:
+class WD_utils:
     item_type = 'P31'
     types_to_search = 'Q17329259', 'Q1580166'  # энц. и словар. статья
     topic_subject = 'P921'  # основная тема
@@ -32,14 +32,9 @@ class Props:
     WP = sites['ruwikipedia']
     WD = WS.data_repository()
 
-
-props = Props()
-
-
-class WD_utils:
-    _claim_main_subject = pwb.Claim(props.WD, props.topic_subject)
-    _claim_described_by_source = pwb.Claim(props.WD, props.described_by_source)
-    _claim_dedicated_article = pwb.Claim(props.WD, props.dedicated_article)
+    _claim_main_subject = pwb.Claim(WD, topic_subject)
+    _claim_described_by_source = pwb.Claim(WD, described_by_source)
+    _claim_dedicated_article = pwb.Claim(WD, dedicated_article)
 
     enc_meta = {}
 
@@ -48,18 +43,18 @@ class WD_utils:
         self.test_run = test_run
 
     def get_topic_items(self, itemWD):
-        return [i.target for i in itemWD.claims.get(props.topic_subject, []) if isinstance(i.target, ItemPage)]
+        return [i.target for i in itemWD.claims.get(self.topic_subject, []) if isinstance(i.target, ItemPage)]
 
     def claim_main_subject(self):
-        # return pwb.Claim(self.WD, Props.topic_subject)
+        # return pwb.Claim(self.WD, self.topic_subject)
         return copy.deepcopy(self._claim_main_subject)
 
     def claim_described_by_source(self):
-        # return pwb.Claim(WD, Props.described_by_source)
+        # return pwb.Claim(WD, self.described_by_source)
         return copy.deepcopy(self._claim_described_by_source)
 
     def claim_dedicated_article(self):
-        # return pwb.Claim(WD, Props.dedicated_article)
+        # return pwb.Claim(WD, self.dedicated_article)
         return copy.deepcopy(self._claim_dedicated_article)
 
     @staticmethod
@@ -80,7 +75,7 @@ class WD_utils:
         if enc_item:
             for c in item.claims.get(props.described_by_source, []):
                 if enc_item.id == c.target.id:
-                    for q in c.qualifiers.get(props.dedicated_article, []):
+                    for q in c.qualifiers.get(self.dedicated_article, []):
                         if q.target.id == search_id:
                             return True
 
@@ -97,8 +92,8 @@ class WD_utils:
             return True
 
     # def is_item_of_disambig(self, item: ItemPage) -> bool:
-    #     for e in item.claims.get(props.item_type, []):
-    #         if e.target and e.target.id == props.disambig:
+    #     for e in item.claims.get(self.item_type, []):
+    #         if e.target and e.target.id == self.disambig:
     #             return True
 
     def _join_items_article_and_subject(self, pname: str, subject_item_id: str, target_item: ItemPage):
@@ -112,9 +107,9 @@ class WD_utils:
     def add_main_subject(self, itemWD: ItemPage, item_id: str = None, item: ItemPage = None):
         """ создать ссылку на элемент темы """
         claim_topic_subject = self.claim_main_subject()
-        pwb.Claim(props.WD, props.topic_subject)
+        pwb.Claim(self.WD, self.topic_subject)
         if item_id:
-            wditem_subject = pwb.ItemPage(props.WD, item_id)
+            wditem_subject = pwb.ItemPage(self.WD, item_id)
         elif item:
             wditem_subject = item
         else:
@@ -131,7 +126,7 @@ class WD_utils:
                                    target_item: ItemPage):
         """ создать "описывается в источниках" в элементе темы """
         # s = get_item_from_listdict(other_sources, 'argument', m_item_id)
-        # [i.target for i in self.wd_item.claims.get(Props.main_subject, [])]
+        # [i.target for i in self.wd_item.claims.get(self.main_subject, [])]
         claim_described_by = self.claim_described_by_source()
         target = self.enc_meta[rootpagename]['wditem']
         claim_described_by.setTarget(target)
@@ -162,15 +157,14 @@ class WD_utils:
 
     def get_WPsite(self, pagename_raw):
         # .target.title(with_ns=False)
-        lnk_tmp = pwb.Link(pagename_raw, source=props.WP)
+        lnk_tmp = pwb.Link(pagename_raw, source=self.WP)
         lang_tmp = lnk_tmp.parse_site()[1]
         try:
             title_tmp = lnk_tmp.title
         except pwb.exceptions.SiteDefinitionError:
             '''Вероятно нестандартный языковый код страницы'''
             return None, None
-        # WP = self.WP if lang_tmp == 'ru' else pwb.Site(lang_tmp, 'wikipedia')
-        WP = props.sites.get(lang_tmp + 'wikipedia')
+        WP = self.sites.get(lang_tmp + 'wikipedia')
         if not WP:
-            WP = props.sites[lang_tmp + 'wikipedia'] = pwb.Site(lang_tmp, 'wikipedia')
+            WP = self.sites[lang_tmp + 'wikipedia'] = pwb.Site(lang_tmp, 'wikipedia')
         return WP, title_tmp

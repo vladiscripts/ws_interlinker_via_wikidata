@@ -13,7 +13,7 @@ import mwparserfromhell as mwp
 import vladi_helpers.lib_for_mwparserfromhell as mymwp
 import wiki_util
 # from wikidata import wiki_util
-from wd_utils import WD_utils, props
+from wd_utils import WD_utils
 from get_other_sources_from_lua import get_other_sources
 # from vladi_helpers.file_helpers import csv_save_dict_fromListWithHeaders, json_store_to_file, json_data_from_file
 # # from vladi_helpers import vladi_helpers
@@ -85,11 +85,11 @@ class Process:
 
         # if p.title != 'Гай Валерий Катулл': return
 
-        p.itemWD = self.wd.get_item(props.WS, page=page)
+        p.itemWD = self.wd.get_item(self.wd.WS, page=page)
         if self.works_pages_with_wditems and not p.itemWD:
             return
 
-        # self.page = pywikibot.Page(props.WS, title)
+        # self.page = pywikibot.Page(self.wd.WS, title)
         # todo:  if not page.revisions[0].patroled.since >= 5days: return
 
         # пропускать страницы-перенаправления
@@ -100,7 +100,7 @@ class Process:
         # работать по энциклопедическая статья и словарная статья
         if self.work_only_enc:
             for e in p.itemWD.claims.get(props.item_type, []):
-                if e.target.id not in props.types_to_search:
+                if e.target.id not in self.wd.types_to_search:
                     print('не словарная статья')
                     return
 

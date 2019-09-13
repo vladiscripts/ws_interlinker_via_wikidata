@@ -13,7 +13,7 @@ import mwparserfromhell as mwp
 import vladi_helpers.lib_for_mwparserfromhell as mymwp
 import wiki_util
 # from wikidata import wiki_util
-from wd_utils import WD_utils, props
+from wd_utils import WD_utils
 from get_other_sources_from_lua import get_other_sources
 # from vladi_helpers.file_helpers import csv_save_dict_fromListWithHeaders, json_store_to_file, json_data_from_file
 # # from vladi_helpers import vladi_helpers
@@ -73,10 +73,10 @@ class Author(Process):
         topic_sitelink = p.itemWD.sitelinks['ruwikisource']
 
         # m_enc_article_item = self.wd.get_item(props.WS, title=m_pagename_enc)
-        m_enc_article_page = pwb.Page(props.WS, m_pagename_enc)
+        m_enc_article_page = pwb.Page(self.wd.WS, m_pagename_enc)
         if not m_enc_article_page.exists():
             return
-        m_enc_article_item = self.wd.get_item(props.WS, page=m_enc_article_page)
+        m_enc_article_item = self.wd.get_item(self.wd.WS, page=m_enc_article_page)
         if not m_enc_article_item:
             return
 
@@ -213,7 +213,7 @@ class Author(Process):
             # todo исключить страницы /ДО
             # подключаем указанный в ручную item
             # wd_item = pwb.ItemPage(WD, 'Q1057344')
-            m_item = pwb.ItemPage(props.WD, m_item_id)
+            m_item = pwb.ItemPage(self.wd.WD, m_item_id)
             m_item.get()
 
             # if prj in wd_item.sitelinks and wd_item.getSitelink(prj) != self.page.title:
@@ -230,15 +230,15 @@ class Author(Process):
 
             else:
                 # todo: исключить страницы /ДО, перенаправления, страницы произведений не энциклопедий
-                # self.wd_item.addClaim.claims.get(Props.main_subject)
+                # self.wd_item.addClaim.claims.get(self.wd.main_subject)
 
-                claim = pwb.Claim(props.WD, props.topic_subject)
-                target = pwb.ItemPage(props.WD, m_item_id)
+                claim = pwb.Claim(self.wd.WD, self.wd.topic_subject)
+                target = pwb.ItemPage(self.wd.WD, m_item_id)
                 claim.setTarget(target)
                 # m_item.addClaim(claim, bot=self.as_bot, summary='add main subject')
 
                 # # проверяем запись и очищаем параметр
-                # wd_item_ids = [i.id for i in self.wd_item.claims.get(Props.main_subject)]
+                # wd_item_ids = [i.id for i in self.wd_item.claims.get(self.wd.main_subject)]
                 # if m_item_id in wd_item_ids:
                 #     r = True
                 #     # mymwp.param_value_clear(tpl, param)
@@ -275,7 +275,7 @@ class Author(Process):
         # if not WP:
         #     return
 
-        # m_wp_page_item = self.wd.get_item(props.WP, title=m_wp_pagename)
+        # m_wp_page_item = self.wd.get_item(self.wd.WP, title=m_wp_pagename)
         # if not m_wp_page_item:
         #     return
         # if self.require_ruwiki_sitelink_in_item and not m_wp_page_item.sitelinks.get('ruwiki'):

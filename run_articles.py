@@ -13,7 +13,7 @@ import mwparserfromhell as mwp
 import vladi_helpers.lib_for_mwparserfromhell as mymwp
 import wiki_util
 # from wikidata import wiki_util
-from wd_utils import WD_utils, props
+from wd_utils import WD_utils
 from get_other_sources_from_lua import get_other_sources
 # from vladi_helpers.file_helpers import csv_save_dict_fromListWithHeaders, json_store_to_file, json_data_from_file
 # # from vladi_helpers import vladi_helpers
@@ -129,8 +129,8 @@ class Articles(Process):
 
         # не работать по ссылкам на дизамбиги
         if self.skip_wd_links_to_disambigs:
-            for e in topic_item.claims.get(props.item_type, []):
-                if e.target and e.target.id == props.disambig:
+            for e in topic_item.claims.get(self.wd.item_type, []):
+                if e.target and e.target.id == self.wd.disambig:
                     print('ссылка на дизамбиг')
                     return
 
@@ -177,15 +177,15 @@ class Articles(Process):
         #             mymwp.param_value_clear(tpl, param)
         #
         #     else:
-        #         # self.wd_item.addClaim.claims.get(Props.main_subject)
+        #         # self.wd_item.addClaim.claims.get(self.wd.main_subject)
         #
-        #         claim = pywikibot.Claim(self.WD, Props.main_subject)
+        #         claim = pywikibot.Claim(self.WD, self.wd.main_subject)
         #         target = pywikibot.ItemPage(self.WD, m_item_id)
         #         claim.setTarget(target)
         #         # self.wd_item.addClaim(claim, bot=self.as_bot, summary='add main subject')
         #
         #         # проверяем запись и очищаем параметр
-        #         linksWD = [i.id for i in self.wd_item.claims.get(Props.main_subject)]
+        #         linksWD = [i.id for i in self.wd_item.claims.get(self.wd.main_subject)]
         #         if m_item_id in linksWD:
         #             mymwp.param_value_clear(tpl, param)
         #
@@ -206,7 +206,7 @@ class Articles(Process):
             # todo исключить страницы /ДО
             # подключаем указанный в ручную item
             # wd_item = pywikibot.ItemPage(WD, 'Q1057344')
-            m_item = pwb.ItemPage(props.WD, m_item_id)
+            m_item = pwb.ItemPage(self.wd.WD, m_item_id)
             m_item.get()
 
             # if prj in wd_item.sitelinks and wd_item.getSitelink(prj) != self.page.title:
@@ -214,15 +214,15 @@ class Articles(Process):
             # в ВД другое значение
 
             # todo: исключить страницы /ДО, перенаправления, страницы произведений не энциклопедий
-            # self.wd_item.addClaim.claims.get(Props.main_subject)
+            # self.wd_item.addClaim.claims.get(self.wd.main_subject)
 
-            claim = pwb.Claim(props.WD, props.topic_subject)
-            target = pwb.ItemPage(props.WD, m_item_id)
+            claim = pwb.Claim(self.wd.WD, self.wd.topic_subject)
+            target = pwb.ItemPage(self.wd.WD, m_item_id)
             claim.setTarget(target)
             # m_item.addClaim(claim, bot=self.as_bot, summary='add main subject')
 
             # # проверяем запись и очищаем параметр
-            # wd_item_ids = [i.id for i in self.wd_item.claims.get(Props.main_subject)]
+            # wd_item_ids = [i.id for i in self.wd_item.claims.get(self.wd.main_subject)]
             # if m_item_id in wd_item_ids:
             #     r = True
             #     # mymwp.param_value_clear(tpl, param)
