@@ -99,7 +99,12 @@ class Process:
 
         # работать по энциклопедическая статья и словарная статья
         if self.work_only_enc:
-            for e in p.itemWD.claims.get(props.item_type, []):
+            # is_article = False
+            for e in self.wd.get_claim_item_type(p.itemWD):
+                #     for t in e.target.claims.claims.get('P279', []):
+                #         if t.id == self.wd.enc_article_item:
+                #             is_article = True
+                # if not is_article:
                 if e.target.id not in self.wd.types_to_search:
                     print('не словарная статья')
                     return

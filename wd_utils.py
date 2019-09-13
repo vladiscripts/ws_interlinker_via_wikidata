@@ -32,6 +32,18 @@ class WD_utils:
     WP = sites['ruwikipedia']
     WD = WS.data_repository()
 
+    def get_claim_topics(self, item: ItemPage) -> list:
+        return item.claims.get(self.topic_subject, [])
+
+    def get_claim_described_by_source(self, item: ItemPage) -> list:
+        return item.claims.get(self.described_by_source, [])
+
+    def get_claim_item_type(self, item: ItemPage) -> list:
+        return item.claims.get(self.item_type, [])
+
+    def get_qualifiers_dedicated_article(self, c: pwb.Claim) -> list:
+        return c.qualifiers.get(self.dedicated_article, [])
+
     _claim_main_subject = pwb.Claim(WD, topic_subject)
     _claim_described_by_source = pwb.Claim(WD, described_by_source)
     _claim_dedicated_article = pwb.Claim(WD, dedicated_article)
@@ -73,21 +85,28 @@ class WD_utils:
     def id_in_item_describes(self, rootpagename: str, search_id: str, item: ItemPage) -> bool:
         enc_item = self.enc_meta[rootpagename]['wditem']
         if enc_item:
-            for c in item.claims.get(props.described_by_source, []):
+            for c in self.get_claim_described_by_source(item):
                 if enc_item.id == c.target.id:
                     for q in c.qualifiers.get(self.dedicated_article, []):
                         if q.target.id == search_id:
                             return True
 
-    def id_in_item_topics(self, search_id: str, item: ItemPage) -> bool:
-        for i in item.claims.get(props.topic_subject, []):
-            if i.target.id == search_id:
-                return True
+    def id_in_item_topics(self, item: ItemPage, search_id: str) -> bool:
+        _is = False
+        for i in self.get_claim_topics(item):
+            if i.target and i.target.id == search_id:
+                _is = True
+                break
+        return _is
+
+    def another_id_in_item_topics(self, item: ItemPage, search_id: str) -> bool:
+        if self.get_claim_topics(item) and not self.id_in_item_topics(item, search_id):
+            return True
 
     def param_value_equal_item(self, rootpagename: str, m_wp_pagename: str, itemWD: ItemPage,
                                m_wp_page_item: ItemPage) -> bool:
         if self.id_in_item_describes(rootpagename, itemWD.id, m_wp_page_item) \
-                and self.id_in_item_topics(m_wp_page_item.id, itemWD):
+                and self.id_in_item_topics(itemWD, m_wp_page_item.id):
             print(f'значение параметра ("{m_wp_pagename}") совпадает с item (label {m_wp_page_item.labels.get("ru")})')
             return True
 

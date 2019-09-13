@@ -34,6 +34,11 @@ def page_posting(page, page_text, test_run=False):
         page.text = page_text
         page.save('очистка парметра, перенесено в Викиданные')
 
+def get_wikipage(site, name):
+    page = pwb.Page(site, name)
+    while page.isRedirectPage():
+        page = page.getRedirectTarget()
+    return page
 
 def get_pages(base_args, args: list = None, test_pages: list = None, test_run: bool = False):
     """ Get list of pages which using 'Template:infobox former country'
