@@ -7,7 +7,7 @@ from lxml.html import fromstring
 import re
 from urllib.parse import urlencode, urlparse, parse_qs, parse_qsl, unquote, quote
 # from vladi_helpers import vladi_helpers
-# from vladi_helpers.file_helpers import csv_save_dict_fromListWithHeaders, json_store_to_file, json_data_from_file
+# from vladi_helpers.file_helpers import csv_save_dict_fromListWithHeaders, json_save_to_file, json_load_from_file
 from typing import Iterable, Union
 import pywikibot as pwb
 from pywikibot.page import ItemPage
@@ -18,7 +18,8 @@ import vladi_helpers.lib_for_mwparserfromhell as mymwp
 
 class WD_utils:
     item_type = 'P31'
-    types_to_search = 'Q17329259', 'Q1580166'  # энц. и словар. статья
+    types_to_search = 'Q13433827', 'Q17329259', 'Q1580166'  # энц. и словар. статья
+    enc_article_item = 'Q10389811'  # энц. статья
     topic_subject = 'P921'  # основная тема
     described_by_source = 'P1343'  # описывается в источниках
     dedicated_article = 'P805'  # тема утверждения
@@ -50,7 +51,7 @@ class WD_utils:
 
     enc_meta = {}
 
-    def __init__(self, as_bot=False, test_run=False):
+    def __init__(self, as_bot=True, test_run=False):
         self.as_bot = as_bot
         self.test_run = test_run
 
@@ -117,20 +118,20 @@ class WD_utils:
 
     def _join_items_article_and_subject(self, pname: str, subject_item_id: str, target_item: ItemPage):
         # создать ссылку на элемент темы
-        wditem_subject = self.add_main_subject(item_id=subject_item_id)
+        wditem_subject = self.add_main_subject(target_id=subject_item_id)
 
         # создать "описывается в источниках" в элементе темы
         if wditem_subject:
             self.add_article_in_subjectitem(wditem_subject, pname, target_item)
 
-    def add_main_subject(self, itemWD: ItemPage, item_id: str = None, item: ItemPage = None):
+    def add_main_subject(self, itemWD: ItemPage, target_id: str = None, target: ItemPage = None):
         """ создать ссылку на элемент темы """
         claim_topic_subject = self.claim_main_subject()
         pwb.Claim(self.WD, self.topic_subject)
-        if item_id:
-            wditem_subject = pwb.ItemPage(self.WD, item_id)
-        elif item:
-            wditem_subject = item
+        if target_id:
+            wditem_subject = pwb.ItemPage(self.WD, target_id)
+        elif target:
+            wditem_subject = target
         else:
             return
         # target = wd_item_ids[0]
@@ -180,7 +181,8 @@ class WD_utils:
         lang_tmp = lnk_tmp.parse_site()[1]
         try:
             title_tmp = lnk_tmp.title
-        except pwb.exceptions.SiteDefinitionError:
+        # except (pwb.exceptions.SiteDefinitionError, pwb.exceptions.InvalidTitle):
+        except:
             '''Вероятно нестандартный языковый код страницы'''
             return None, None
         WP = self.sites.get(lang_tmp + 'wikipedia')

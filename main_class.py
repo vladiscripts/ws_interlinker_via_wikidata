@@ -15,7 +15,7 @@ import wiki_util
 # from wikidata import wiki_util
 from wd_utils import WD_utils
 from get_other_sources_from_lua import get_other_sources
-# from vladi_helpers.file_helpers import csv_save_dict_fromListWithHeaders, json_store_to_file, json_data_from_file
+# from vladi_helpers.file_helpers import csv_save_dict_fromListWithHeaders, json_save_to_file, json_load_from_file
 # # from vladi_helpers import vladi_helpers
 from vladi_helpers.vladi_helpers import get_item_from_listdict
 from abc import abstractmethod
@@ -31,7 +31,7 @@ class PageMeta:
     rootpagename: str
     subpagename: str
     tpl = None
-    tplname: str
+    tpl_name: str
     is_author_tpl = False
 
     def __init__(self, page: pwb.page.Page):
@@ -42,15 +42,16 @@ class PageMeta:
 
     def tpl_data(self, tpl):
         self.tpl = tpl
-        self.tplname = tpl.name.strip()
+        self.tpl_name = tpl.name.strip()
         # self.is_author_tpl = self.tplname.lower() in allowed_header_names
 
 
 class Process:
     works_pages_with_wditems = True  # работать со страницами только имеющими элемент ВД
     require_ruwiki_sitelink_in_item = True  # пропускать страницы если у элемента темы нет страницы в ruwiki
+    skip_wd_links_to_disambigs = True  # не работать по словарным ссылкам на дизамбиги
     make_wd_links = False  # линковать ссылки ВД, иначе только удалять параметры дублирующие ВД
-    work_only_enc = False
+    work_only_enc: bool  # работать только по элементам типов 'Q17329259', 'Q1580166' (энц. и словар. статьи)
     skip_links_with_anchors = True  # не трогать ссылки содержащие '#', вроде 'РСКД/Статья#якорь'
     prj = 'ruwikisource'
     allowed_header_names: tuple
@@ -82,11 +83,13 @@ class Process:
     def process_page(self, page):
         if page.isRedirectPage(): return
         p = PageMeta(page)
+        print(p.title)
 
         # if p.title != 'Гай Валерий Катулл': return
 
         p.itemWD = self.wd.get_item(self.wd.WS, page=page)
         if self.works_pages_with_wditems and not p.itemWD:
+            print('no p.itemWD')
             return
 
         # self.page = pywikibot.Page(self.wd.WS, title)
@@ -109,25 +112,23 @@ class Process:
                     print('не словарная статья')
                     return
 
-        print(p.title)
-
         text = p.page.get()
         wikicode = mwp.parse(text)
         # wikicode = mwp.parse('[[dffd|2222]][[Категория:апап|  33]]')
         for tpl in wikicode.filter_templates():
-            p.tpl_name = tpl.name.strip()
+            p.tpl_data(tpl)
             if p.tpl_name in self.allowed_header_names:
-                p.tpl_data(tpl)
 
                 if 'ТСД' in p.tpl_name:
                     return
-                if [s for s in wikicode.filter_wikilinks(matches='^\[\[Категория:[^|]*?[Пп]еренаправления')]:
+                if [s for s in wikicode.filter_wikilinks(matches=r'^\[\[Категория:[^|]*?[Пп]еренаправления')]:
                     return
                 # фильтр по размеру текста
                 if p.tpl_name in ('МЭСБЕ', 'БЭАН'):
                     tmp = text.replace(str(tpl), '')
-                    for s in wikicode.filter_wikilinks(matches='^\[\[Категория:'): tmp = tmp.replace(str(s), '')
+                    for s in wikicode.filter_wikilinks(matches=r'^\[\[Категория:'): tmp = tmp.replace(str(s), '')
                     if len(tmp) < 100:
+                        print('размер текста < 100')
                         return
 
                 # if p.is_author_tpl is None: return
@@ -136,7 +137,8 @@ class Process:
                 if p.params_to_delete:
                     # очищаем параметры
                     mymwp.removeTplParameters(p.tpl, p.params_to_delete)
-                    wiki_util.page_posting(p.page, str(wikicode), self.test_run)
+                    wiki_util.page_posting(p.page, str(wikicode), 'очистка параметра, перенесено в Викиданные',
+                                           self.test_run)
                 break
 
     def process_params(self, p):

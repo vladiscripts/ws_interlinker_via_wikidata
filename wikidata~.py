@@ -15,7 +15,7 @@ import wiki_util
 # from wikidata import wiki_util
 from wd_utils import WD_utils, props
 from get_other_sources_from_lua import get_other_sources
-# from vladi_helpers.file_helpers import csv_save_dict_fromListWithHeaders, json_store_to_file, json_data_from_file
+# from vladi_helpers.file_helpers import csv_save_dict_fromListWithHeaders, json_save_to_file, json_load_from_file
 # # from vladi_helpers import vladi_helpers
 from vladi_helpers.vladi_helpers import get_item_from_listdict
 
@@ -457,8 +457,8 @@ class Process:
                 if self.make_wd_links:
                     # todo слишком общие страницы в ВИКИПЕДИЯ, не имеет смысла их связывать с элементом
                     # добавить свойство "основная тема"
-                    if not self.wd.id_in_item_topics(m_wp_page_item.id, self.itemWD):
-                        self.wd.add_main_subject(self.itemWD, item=m_wp_page_item)
+                    if not self.wd.id_in_item_topics(self.itemWD, m_wp_page_item.id):
+                        self.wd.add_main_subject(self.itemWD, target=m_wp_page_item)
                     # todo создаёт дубли, или это было из-за повторного использования вд-свойствв
                     if not self.wd.id_in_item_describes(self.rootpagename, self.itemWD.id, m_wp_page_item):
                         self.wd.add_article_in_subjectitem(self.rootpagename, m_wp_page_item, self.itemWD)
@@ -603,8 +603,8 @@ class Process:
                 if self.make_wd_links:
                     # todo слишком общие страницы в ВИКИПЕДИЯ, не имеет смысла их связывать с элементом
                     # добавить свойство "основная тема"
-                    if not self.wd.id_in_item_topics(m_wp_page_item.id, self.itemWD):
-                        self.wd.add_main_subject(self.itemWD, item=m_wp_page_item)
+                    if not self.wd.id_in_item_topics(self.itemWD, m_wp_page_item.id):
+                        self.wd.add_main_subject(self.itemWD, target=m_wp_page_item)
                     # todo создаёт дубли, или это было из-за повторного использования вд-свойствв
                     if not self.wd.id_in_item_describes(self.rootpagename, self.itemWD.id, m_wp_page_item):
                         self.wd.add_article_in_subjectitem(self.rootpagename, m_wp_page_item, self.itemWD)

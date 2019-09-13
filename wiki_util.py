@@ -7,7 +7,7 @@
 # import re
 # from urllib.parse import urlencode, urlparse, parse_qs, parse_qsl, unquote, quote
 # from vladi_helpers import vladi_helpers
-# from vladi_helpers.file_helpers import csv_save_dict_fromListWithHeaders, json_store_to_file, json_data_from_file
+# from vladi_helpers.file_helpers import csv_save_dict_fromListWithHeaders, json_save_to_file, json_load_from_file
 import vladi_helpers.lib_for_mwparserfromhell as mymwp
 import pywikibot as pwb
 
@@ -27,12 +27,14 @@ def parse_pagename(title: str):
 #             mymwp.param_value_clear(tpl, pname, new_val='\n')
 
 
-def page_posting(page, page_text, test_run=False):
+def page_posting(page, page_text, summary=None, test_run=False):
+    page_text = page_text.strip()
     if page.text != page_text:
         if test_run:
             return
         page.text = page_text
-        page.save('очистка парметра, перенесено в Викиданные')
+        page.save(summary)
+
 
 def get_wikipage(site, name):
     page = pwb.Page(site, name)
@@ -40,15 +42,17 @@ def get_wikipage(site, name):
         page = page.getRedirectTarget()
     return page
 
-def get_pages(base_args, args: list = None, test_pages: list = None, test_run: bool = False):
+
+def get_pages(args: list = None, test_pages: list = None):
     """ Get list of pages which using 'Template:infobox former country'
         без кавычек имена станиц/категорий в параметрах
     """
     from pywikibot import pagegenerators
-    from wd_utils import props
+    # from wd_utils import props
+    from wd_utils import WD_utils
 
-    if test_run:
-        gen = (pwb.Page(props.WP, title) for title in test_pages if title and title.strip() != '')
+    if test_pages:
+        gen = (pwb.Page(WD_utils.WP, title) for title in test_pages if title and title.strip() != '')
     else:
         # args = ['-family:wikipedia', '-lang:en', '-ns:0'] + [f'-transcludes:{tpl}' for tpl in tpl_names]
         local_args = pwb.handle_args(base_args)

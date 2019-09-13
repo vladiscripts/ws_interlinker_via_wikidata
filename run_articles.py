@@ -15,10 +15,10 @@ import wiki_util
 # from wikidata import wiki_util
 from wd_utils import WD_utils
 from get_other_sources_from_lua import get_other_sources
-# from vladi_helpers.file_helpers import csv_save_dict_fromListWithHeaders, json_store_to_file, json_data_from_file
+# from vladi_helpers.file_helpers import csv_save_dict_fromListWithHeaders, json_save_to_file, json_load_from_file
 # # from vladi_helpers import vladi_helpers
 from vladi_helpers.vladi_helpers import get_item_from_listdict
-from tpl_process import PageMeta, Process
+from main_class import PageMeta, Process
 
 """Перенос ссылок на энциклопедии/словари из статей в Викиданые и создание там записи."""
 re_cat_redirect = re.compile(r'\[\[Категория:[^]]+?Перенаправления', flags=re.IGNORECASE)
@@ -31,11 +31,12 @@ re_cat_redirect = re.compile(r'\[\[Категория:[^]]+?Перенаправ
 
 
 class Articles(Process):
-    works_pages_with_wditems = True  # работать со страницами только имеющими элемент ВД
-    require_ruwiki_page_via_item = True  # пропускать страницы если у элемента темы нет страницы в ruwiki
-    skip_wd_links_to_disambigs = True  # не работать по словарным ссылкам на дизамбиги
+    # works_pages_with_wditems = True  # работать со страницами только имеющими элемент ВД
+    # require_ruwiki_sitelink_in_item = True  # пропускать страницы если у элемента темы нет страницы в ruwiki
+    # skip_wd_links_to_disambigs = True  # не работать по словарным ссылкам на дизамбиги
     make_wd_links = True  # линковать ссылки ВД, иначе только удалять параметры дублирующие ВД
-    work_only_enc = False  # работать только по элементам типов 'Q17329259', 'Q1580166' (энц. и словар. статьи)
+    work_only_enc = True  # работать только по элементам типов 'Q17329259', 'Q1580166' (энц. и словар. статьи)
+    skip_existing_topics = True  # Item уже имеет темы, отличные от ручной ссылки. Возможно в ручной ссылке - дизамбиг
 
     # wikiprojects = parse_lua_to_dict(WS, 'projects')
     # wikiprojects = ['ВИКИПЕДИЯ', ]
@@ -51,56 +52,61 @@ class Articles(Process):
         # self.allowed_header_names = tuple(s.lower() for s in ['отексте'] + list(self.enc_prefixes))
         self.allowed_header_names = tuple(['отексте'] + list(self.enc_prefixes))
 
-    def param_encyclopedia(self, p, pname, m_enc):
-        """ done для авторов
-        """
-        m_pagename_enc = self.wd.enc_meta[pname].get('titleVT')  # 'Британника' и т.п.
-        if not m_pagename_enc:
-            print('нет m_pagename_enc')
-            return
-        m_pagename_enc = m_pagename_enc.replace('$1', m_enc)
-
-        topic_items = self.wd.get_topic_items(p.itemWD)
-        if not topic_items:
-            # print('темы не указаны в свойсте. Надо создать, пока пропускаем')
-            return
-
-        # todo исключить страницы /ДО
-        # todo: исключить страницы /ДО, перенаправления, страницы произведений не энциклопедий
-        # todo: ручная ссылка без статьи и ВД - Всеволод Михайлович Гаршин
-
-        m_enc_article_page = pwb.Page(props.WS, m_pagename_enc)
-        # if not m_enc_article_page.exists():  return
-        m_enc_article_item = self.wd.get_item(props.WS, page=m_enc_article_page)
-        if not m_enc_article_item:
-            print('нет m_enc_article_item')
-            return
-
-        for topic_item in topic_items:
-            if topic_item.isRedirectPage():
-                topic_item = topic_item.getRedirectTarget()
-            topic_item.get()
-
-            # не работать по ссылкам на дизамбиги
-            if self.skip_wd_links_to_disambigs:
-                for e in topic_item.claims.get(props.item_type, []):
-                    if e.target and e.target.id == props.disambig:
-                        print('ссылка на дизамбиг')
-                        return
-
-            # todo создаёт дубли, или это было из-за повторного использования вд-свойств
-
-            if not self.wd.id_in_item_describes(pname, m_enc_article_item.id, topic_item):
-                self.wd.add_article_in_subjectitem(pname, topic_item, m_enc_article_item)
-            if self.wd.id_in_item_describes(pname, m_enc_article_item.id, topic_item):
-                p.params_to_delete.append(pname)
-                return
-
-            # # linksWD = self.get_wd_links()
-            # # if not linksWD:
-            # if not self.wd.link_():
-            #     # self.wd.join_items_article_and_subject(pname, m_enc, p.itemWD)
-            #     pass
+    # def param_encyclopedia(self, p, pname, m_enc):
+    #     """ done для авторов
+    #     """
+    #     m_pagename_enc = self.wd.enc_meta[pname].get('titleVT')  # 'Британника' и т.п.
+    #     if not m_pagename_enc:
+    #         print('нет m_pagename_enc')
+    #         return
+    #     m_pagename_enc = m_pagename_enc.replace('$1', m_enc)
+    #
+    #     topic_items = self.wd.get_topic_items(p.itemWD)
+    #     if not topic_items:
+    #         # print('темы не указаны в свойсте. Надо создать, пока пропускаем')
+    #         return
+    #
+    #     # todo: исключить страницы /ДО, перенаправления, страницы произведений не энциклопедий
+    #     # todo: ручная ссылка без статьи и ВД - Всеволод Михайлович Гаршин
+    #
+    #     m_enc_article_page = pwb.Page(self.wd.WS, m_pagename_enc)
+    #     # if not m_enc_article_page.exists():  return
+    #     m_enc_article_item = self.wd.get_item(self.wd.WS, page=m_enc_article_page)
+    #     if not m_enc_article_item:
+    #         print('нет m_enc_article_item')
+    #         return
+    #
+    #     # todo Создаются дубли описаний в темах. Проверить в unittest
+    #     for topic_item in topic_items:
+    #         while topic_item.isRedirectPage():
+    #             topic_item = topic_item.getRedirectTarget()
+    #         topic_item.get()
+    #
+    #         # не работать по ссылкам на дизамбиги
+    #         if self.skip_wd_links_to_disambigs:
+    #             for e in topic_item.claims.get(self.wd.item_type, []):
+    #                 if e.target and e.target.id == self.wd.disambig:
+    #                     print('ссылка на дизамбиг')
+    #                     return
+    #
+    #     # todo создаёт дубли, или это было из-за повторного использования вд-свойств
+    #     # if self.make_wd_links:
+    #     #     if not self.wd.id_in_item_topics(p.itemWD, m_enc_article_item.id):
+    #     #         # todo !!! указывает ссылки статей вместо ссылок темы
+    #     #         self.wd.add_main_subject(p.itemWD, target=m_enc_article_item)
+    #     #     if not self.wd.id_in_item_describes(p.rootpagename, p.itemWD.id, m_enc_article_item):
+    #     #         self.wd.add_article_in_subjectitem(p.rootpagename, m_enc_article_item, p.itemWD)
+    #
+    #     if self.wd.id_in_item_topics(p.itemWD, m_enc_article_item.id) \
+    #             and self.wd.id_in_item_describes(p.rootpagename, p.itemWD.id, m_enc_article_item):
+    #         p.params_to_delete.append(pname)
+    #         return
+    #
+    #     # # linksWD = self.get_wd_links()
+    #     # # if not linksWD:
+    #     # if not self.wd.link_():
+    #     #     # self.wd.join_items_article_and_subject(pname, m_enc, p.itemWD)
+    #     #     pass
 
     def param_Wikipedia(self, p, pname, m_wp_pagename_raw):
         WP, m_wp_pagename = self.wd.get_WPsite(m_wp_pagename_raw)
@@ -142,6 +148,8 @@ class Articles(Process):
             #     return
 
         # todo слишком общие страницы в ВИКИПЕДИЯ, не имеет смысла их связывать с элементом
+
+        # todo Создаются дубли описаний в темах. Проверить в unittest
         # добавить свойство "основная тема"
         if self.make_wd_links:
             if not self.wd.id_in_item_topics(m_wp_page_item.id, p.itemWD):
@@ -258,19 +266,19 @@ if __name__ == '__main__':
     # wd = WD_utils(as_bot=as_bot, test_run=test_run)
     d = Articles(test_run=False)
     # pwb.Site().login()
-    d.works_pages_with_wditems = True
+    # d.works_pages_with_wditems = True
 
     # import author_tpl, articles
 
     # articles = articles.Articles(d)
 
     # ТЭ1/
-    pages = ['РСКД/Salarium', ]
-    pages = ['МЭСБЕ/Дионис', ]
+    # pages = ['РСКД/Salarium', ]
+    # pages = ['МЭСБЕ/Дионис', ]
     # pages = ['БСЭ1/А']
     # pages = ['РСКД/Libitina']
     # pages = ['БЭЮ/Абабды']  # нет элемента ВД
-    pages = ['ПБЭ/ВТ/Акоминат, Никита']  # есть элемент, есть ручная ссылка ВП, нет связи через ВД
+    # pages = ['ПБЭ/ВТ/Акоминат, Никита']  # есть элемент, есть ручная ссылка ВП, нет связи через ВД
     # pages = ['РСКД/Thargelia']  # есть элемент, есть ручная ссылка ВП, нет связи через ВД
     # pages = ['ЭСБЕ/Косва‎']  # есть элемент, есть ручная ссылка ВП, нет связи через ВД
 
@@ -280,10 +288,6 @@ if __name__ == '__main__':
 
     # Pages generator
     # wiki_util.get_pages(tpl_names, test_pages = None, is_test_run = False)
-    base_args = ['-family:wikisource', '-lang:ru',
-                 # '-format:3',
-                 # '-ns:0'
-                 ]  # [f'-transcludes:{tpl}' for tpl in tpl_names]
     # args += ['-ns:0', '-cat:"Викитека:Ручная ссылка:Википедия"', '-catfilter:"Викитека:Ссылка из Викиданных:Викитека"', '-intersect']
     # без кавычек
     # from pywikibot import pagegenerators
@@ -301,17 +305,17 @@ if __name__ == '__main__':
         #     '-catr:"Категория:РБС:Поэты"',
         #     '-cat:РБС:Поэты',
         # '-page:МЭСБЕ/Аахен',
-        # '-page:ЭСБЕ/Венецуэла',
+        # '-page:БЭАН/Завет Ветхий и Новый',
         # '-titleregex:(%s)' % '|'.join(d.enc_prefixes)
         # '-cat:Ручная ссылка:ВЭ',
         # '-cat:Ручная ссылка:ЭСБЕ‎',
+        # '-cat:Ручная ссылка:Википедия',
+        # '-cat:Ссылка из Викиданных:Викитека',  # страница имеет itemWD
         # '-cat:Викиданные:Статьи с указанным элементом темы',
         # '-catfilter:Викиданные:Есть элемент темы‎',
         # '-cat:Авторы:Ручная ссылка:ББСРП:Совпадает со ссылкой из Викиданных',
-        # '-cat:Викитека:Ручная ссылка совпадает со ссылкой из Викиданных:БСЭ1',  # done
-        # '-cat:Викитека:Ссылка из Викиданных:Викитека',  # страница имеет itemWD
+        # '-cat:Ручная ссылка совпадает со ссылкой из Викиданных:БСЭ1',  # done
         # '-cat:Ручная ссылка совпадает со ссылкой из Викиданных:Википедия‎',
-        '-cat:Ручная ссылка:Википедия‎',
         # '-titleregex:(%s)' % '|'.join(d.enc_prefixes)
         # '-intersect',
     ]

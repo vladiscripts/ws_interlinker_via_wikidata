@@ -15,10 +15,10 @@ import wiki_util
 # from wikidata import wiki_util
 from wd_utils import WD_utils
 from get_other_sources_from_lua import get_other_sources
-# from vladi_helpers.file_helpers import csv_save_dict_fromListWithHeaders, json_store_to_file, json_data_from_file
+# from vladi_helpers.file_helpers import csv_save_dict_fromListWithHeaders, json_save_to_file, json_load_from_file
 # # from vladi_helpers import vladi_helpers
 from vladi_helpers.vladi_helpers import get_item_from_listdict
-from tpl_process import PageMeta, Process
+from main_class import PageMeta, Process
 
 """Перенос ссылок на энциклопедии/словари из статей в Викиданые и создание там записи."""
 re_cat_redirect = re.compile(r'\[\[Категория:[^]]+?Перенаправления', flags=re.IGNORECASE)
@@ -31,11 +31,11 @@ re_cat_redirect = re.compile(r'\[\[Категория:[^]]+?Перенаправ
 
 
 class Author(Process):
-    works_pages_with_wditems = True  # работать со страницами только имеющими элемент ВД
-    require_ruwiki_sitelink_in_item = True  # пропускать страницы если у элемента темы нет страницы в ruwiki
-    make_wd_links = False  # линковать ссылки ВД, иначе только удалять параметры дублирующие ВД
-    work_only_enc = False
-    prj = 'ruwikisource'
+    # works_pages_with_wditems = True  # работать со страницами только имеющими элемент ВД
+    # require_ruwiki_sitelink_in_item = True  # пропускать страницы если у элемента темы нет страницы в ruwiki
+    # make_wd_links = False  # линковать ссылки ВД, иначе только удалять параметры дублирующие ВД
+    work_only_enc = False  # работать только по элементам типов 'Q17329259', 'Q1580166' (энц. и словар. статьи)
+    # prj = 'ruwikisource'
     # allowed_header_names = tuple(s.lower() for s in ('обавторе', 'об авторе', 'об_авторе'))
     allowed_header_names = ('обавторе', 'об авторе', 'об_авторе', 'Обавторе', 'Об авторе', 'Об_авторе')
     is_author_tpl = True
@@ -346,21 +346,9 @@ if __name__ == '__main__':
 
     # Pages generator
     # wiki_util.get_pages(tpl_names, test_pages = None, is_test_run = False)
-    base_args = ['-family:wikisource', '-lang:ru',
-                 # '-format:3',
-                 # '-ns:0'
-                 ]  # [f'-transcludes:{tpl}' for tpl in tpl_names]
     # args += ['-ns:0', '-cat:"Викитека:Ручная ссылка:Википедия"', '-catfilter:"Викитека:Ссылка из Викиданных:Викитека"', '-intersect']
     # без кавычек
-    args = [
-        '-cat:Викитека:Ручная ссылка:Википедия',
-        '-cat:Викитека:Ссылка из Викиданных:Викитека',  # страница имеет itemWD
-        #     '-catr:"Категория:РБС:Поэты"',
-        #     '-cat:РБС:Поэты',
-        # '-page:МЭСБЕ/Аахен',
-        # '-page:ЭСБЕ/Венецуэла',
-        # '-titleregex:(%s)' % '|'.join(d.enc_prefixes)
-    ]
+
     # from pywikibot import pagegenerators
     # query = """SELECT ?item ?sitelink WHERE {
     #     ?item wdt:P31 wd:Q17329259.
@@ -370,7 +358,12 @@ if __name__ == '__main__':
     #     }
     #     LIMIT 300"""
     # generator = pagegenerators.WikidataSPARQLPageGenerator(query, site=wikidata_site)
+
     args = [
+        '-family:wikisource', '-lang:ru',
+        '-format:"{page.can_title}"',
+        # '-format:3',
+        # '-ns:0'  # [f'-transcludes:{tpl}' for tpl in tpl_names]
         # '-cat:Авторы:Ручная ссылка:Изображение:Совпадает со ссылкой из Викиданных',
         # '-cat:Авторы:Ручная ссылка:ВЭ:Совпадает со ссылкой из Викиданных',
         # '-cat:Авторы:Ручная ссылка:РСКД',
@@ -384,9 +377,10 @@ if __name__ == '__main__':
         # '-cat:Викитека:Ручная ссылка совпадает со ссылкой из Викиданных:БСЭ1',  # done
         # '-cat:Викитека:Ссылка из Викиданных:Викитека',  # страница имеет itemWD
         # '-titleregex:(%s)' % '|'.join(d.enc_prefixes)
-        '-intersect',
+        # '-intersect',
+        # '-file:/tmp/list.txt',
     ]
-    gen = wiki_util.get_pages(base_args, args)
+    gen = wiki_util.get_pages(args)
     # gen = wiki_util.get_pages(base_args, ['-catr:Авторы:Ручная_ссылка'], intersect=False)
     for page in gen:
         d.process_page(page)
