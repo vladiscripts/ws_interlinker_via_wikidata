@@ -55,10 +55,9 @@ def get_pages(args: list = None, test_pages: list = None):
         gen = (pwb.Page(WD_utils.WP, title) for title in test_pages if title and title.strip() != '')
     else:
         # args = ['-family:wikipedia', '-lang:en', '-ns:0'] + [f'-transcludes:{tpl}' for tpl in tpl_names]
-        local_args = pwb.handle_args(base_args)
         gen_factory = pwb.pagegenerators.GeneratorFactory()
-        # gen_factory.intersect = intersect
-        for arg in args:
+        local_args = pwb.handle_args(args)
+        for arg in local_args:
             gen_factory.handleArg(arg)
         gen = gen_factory.getCombinedGenerator(
             preload=False

@@ -300,10 +300,10 @@ if __name__ == '__main__':
     #     LIMIT 300"""
     # generator = pagegenerators.WikidataSPARQLPageGenerator(query, site=wikidata_site)
     args = [
-        # '-cat:Викитека:Ручная ссылка:Википедия',
-        # '-cat:Викитека:Ссылка из Викиданных:Викитека',  # страница имеет itemWD
-        #     '-catr:"Категория:РБС:Поэты"',
-        #     '-cat:РБС:Поэты',
+        '-family:wikisource', '-lang:ru',
+        '-format:"{page.can_title}"',
+        # '-format:3',
+        # '-ns:0'  # [f'-transcludes:{tpl}' for tpl in tpl_names]
         # '-page:МЭСБЕ/Аахен',
         # '-page:БЭАН/Завет Ветхий и Новый',
         # '-titleregex:(%s)' % '|'.join(d.enc_prefixes)
@@ -319,7 +319,7 @@ if __name__ == '__main__':
         # '-titleregex:(%s)' % '|'.join(d.enc_prefixes)
         # '-intersect',
     ]
-    gen = wiki_util.get_pages(base_args, args)
+    gen = wiki_util.get_pages(args)
     # gen = wiki_util.get_pages(base_args, ['-catr:Авторы:Ручная_ссылка'], intersect=False)
     for page in gen:
         d.process_page(page)
