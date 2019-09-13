@@ -18,6 +18,7 @@ from get_other_sources_from_lua import get_other_sources
 # from vladi_helpers.file_helpers import csv_save_dict_fromListWithHeaders, json_store_to_file, json_data_from_file
 # # from vladi_helpers import vladi_helpers
 from vladi_helpers.vladi_helpers import get_item_from_listdict
+from abc import abstractmethod
 
 """Перенос ссылок на энциклопедии/словари из статей в Викиданые и создание там записи."""
 re_cat_redirect = re.compile(r'\[\[Категория:[^]]+?Перенаправления', flags=re.IGNORECASE)
@@ -158,11 +159,14 @@ class Process:
 
         return p
 
+    @abstractmethod
     def param_encyclopedia(self, p, pname, m_wp_pagename_raw):
         pass
 
+    @abstractmethod
     def param_Wikipedia(self, p, pname, m_wp_pagename_raw):
         pass
 
+    @abstractmethod
     def param_Image(self, p, pname, m_wp_pagename_raw):
         pass
