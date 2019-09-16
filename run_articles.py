@@ -50,7 +50,7 @@ class Articles(Process):
         super().__init__()
         self.test_run = test_run
         # self.allowed_header_names = tuple(s.lower() for s in ['отексте'] + list(self.enc_prefixes))
-        self.allowed_header_names = tuple(['отексте'] + list(self.enc_prefixes))
+        self.allowed_header_names = tuple(['отексте', 'ЛЕНТАПЕДИЯ'] + list(self.enc_prefixes))
 
     # def param_encyclopedia(self, p, pname, m_enc):
     #     """ done для авторов
@@ -159,11 +159,11 @@ class Articles(Process):
 
             if not self.wd.id_in_item_topics(p.itemWD, m_wp_page_item.id):
                 self.wd.add_main_subject(p.itemWD, target=m_wp_page_item)
-            if not self.wd.id_in_item_describes(p.rootpagename, p.itemWD.id, m_wp_page_item):
+            if not self.wd.id_in_item_describes(p, p.itemWD.id, m_wp_page_item):
                 self.wd.add_article_in_subjectitem(p.rootpagename, m_wp_page_item, p.itemWD)
 
         if self.wd.id_in_item_topics(p.itemWD, m_wp_page_item.id) \
-                and self.wd.id_in_item_describes(p.rootpagename, p.itemWD.id, m_wp_page_item):
+                and self.wd.id_in_item_describes(p, p.itemWD.id, m_wp_page_item):
             p.params_to_delete.append(pname)
             return
 

@@ -83,7 +83,10 @@ class WD_utils:
                 if i.id == item_id:
                     return True
 
-    def id_in_item_describes(self, rootpagename: str, search_id: str, item: ItemPage) -> bool:
+    def id_in_item_describes(self, p, search_id: str, item: ItemPage) -> bool:
+        rootpagename = p.rootpagename
+        if rootpagename == 'Лентапедия' and p.title.endswith('/Полная версия'):
+            rootpagename = 'Лентапедия2'
         enc_item = self.enc_meta[rootpagename]['wditem']
         if enc_item:
             for c in self.get_claim_described_by_source(item):
