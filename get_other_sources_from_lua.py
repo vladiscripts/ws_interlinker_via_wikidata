@@ -6,12 +6,12 @@ from wd_utils import WD_utils
 
 
 def get_other_sources():
-    def parse_lua_to_dict(WS, var_name):
-        k = {'otherSources': 'Модуль:Другие источники', 'projects': 'Модуль:Навигация-мини'}
-        lua_text = pywikibot.Page(WS, k[var_name])
+    def parse_lua_to_dict(WS, page_name, var_name):
+        lua_module = pywikibot.Page(WS, page_name)
+        t = re.sub(r'--.+?\n', '', lua_module.text)
         other_sources_raw = re.search(var_name + r'\s*=\s*{'
                                                  r'((?:\s*{[^}]+?},?\s*)+)'
-                                                 r'}', lua_text.text, flags=re.S | re.VERBOSE)
+                                                 r'}', t, flags=re.S | re.VERBOSE)
         splitted = re.findall(r'\s*{([^}]+?)}(?:,\s|\s$)', other_sources_raw.group(1), flags=re.S | re.VERBOSE)
         data = []
         for params in splitted:
@@ -30,8 +30,8 @@ def get_other_sources():
             raise Exception('Ошибка загрузки данных о словарях из Модуль:Другие источники')
         return data
 
-    other_sources = parse_lua_to_dict(WD_utils.WS, 'otherSources')
-    # wikiprojects = parse_lua_to_dict(self.wd.WD, 'projects')
+    other_sources = parse_lua_to_dict(WD_utils.WS, 'Модуль:Другие источники', 'otherSources')
+    # wikiprojects = parse_lua_to_dict(self.wd.WD, 'Модуль:Навигация-мини', 'projects')
     enc_meta = {}
     for n in other_sources:
         n['wditem'] = pywikibot.ItemPage(WD_utils.WD, n['id'])
