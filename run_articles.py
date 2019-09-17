@@ -158,7 +158,7 @@ class Articles(Process):
             if not self.wd.id_in_item_topics(p.itemWD, m_wp_page_item.id):
                 self.wd.add_main_subject(p.itemWD, target=m_wp_page_item)
             if not self.wd.id_in_item_describes(p, p.itemWD.id, m_wp_page_item):
-                self.wd.add_article_in_subjectitem(p.rootpagename, m_wp_page_item, p.itemWD)
+                self.wd.add_article_in_subjectitem(p, m_wp_page_item, p.itemWD)
 
         if self.wd.id_in_item_topics(p.itemWD, m_wp_page_item.id) \
                 and self.wd.id_in_item_describes(p, p.itemWD.id, m_wp_page_item):

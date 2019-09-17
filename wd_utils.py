@@ -145,13 +145,16 @@ class WD_utils:
         itemWD.addClaim(claim_topic_subject, bot=self.as_bot, summary='+main subject; moved from ruwikisource')
         print(f'add main subject in item')
 
-    def add_article_in_subjectitem(self, rootpagename: str,
+    def add_article_in_subjectitem(self, p,
                                    subject_item: ItemPage,
                                    target_item: ItemPage):
         """ создать "описывается в источниках" в элементе темы """
         # s = get_item_from_listdict(other_sources, 'argument', m_item_id)
         # [i.target for i in self.wd_item.claims.get(self.main_subject, [])]
         claim_described_by = self.claim_described_by_source()
+        rootpagename = p.rootpagename
+        if p.rootpagename == 'Лентапедия' and p.title.endswith('/Полная версия'):
+            rootpagename = 'Лентапедия2'
         target = self.enc_meta[rootpagename]['wditem']
         claim_described_by.setTarget(target)
         qualifier = self.claim_dedicated_article()
