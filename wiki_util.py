@@ -36,8 +36,9 @@ def page_posting(page, page_text, summary=None, test_run=False):
         page.save(summary)
 
 
-def get_wikipage(site, name):
-    page = pwb.Page(site, name)
+def get_wikipage(site, title=None, page=None):
+    if title:
+        page = pwb.Page(site, title)
     while page.isRedirectPage():
         page = page.getRedirectTarget()
     return page

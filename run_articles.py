@@ -129,8 +129,6 @@ class Articles(Process):
         #     return
         #
 
-        if topic_item.isRedirectPage():
-            topic_item = topic_item.getRedirectTarget()
         topic_item.get()
 
         # не работать по ссылкам на дизамбиги

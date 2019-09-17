@@ -12,6 +12,7 @@ from typing import Iterable, Union
 import pywikibot as pwb
 from pywikibot.page import ItemPage
 import copy
+import wiki_util
 # import mwparserfromhell as mwp
 import vladi_helpers.lib_for_mwparserfromhell as mymwp
 
@@ -169,9 +170,10 @@ class WD_utils:
             if item_id:
                 item = pwb.ItemPage(site, item_id)
             elif title:
-                page = pwb.Page(site, title)
+                page = wiki_util.get_wikipage(site, title=title)
                 item = page.data_item()
             elif page:
+                page = wiki_util.get_wikipage(site, page=page)
                 item = page.data_item()
             item.get()
         except pwb.exceptions.NoPage:

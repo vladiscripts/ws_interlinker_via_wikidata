@@ -26,6 +26,8 @@ re_remove_tag_commment = re.compile(r'<!--.*?(?:-->|$)', flags=re.DOTALL)
 
 
 class PageMeta:
+    # do_cause = None
+    page: pwb.page.Page
     itemWD: pwb.ItemPage
     title: str
     rootpagename: str
@@ -33,9 +35,11 @@ class PageMeta:
     tpl = None
     tpl_name: str
     is_author_tpl = False
+    params_to_delete = []
+    summary = 'очистка параметра, перенесено в Викиданные'
 
     def __init__(self, page: pwb.page.Page):
-        self.page = page
+        self.page = wiki_util.get_wikipage(page.site, page=page)
         self.title = page.title()
         self.rootpagename, self.subpagename = wiki_util.parse_pagename(self.title)
         self.params_to_delete = []
@@ -53,6 +57,7 @@ class Process:
     make_wd_links = False  # линковать ссылки ВД, иначе только удалять параметры дублирующие ВД
     work_only_enc: bool  # работать только по элементам типов 'Q17329259', 'Q1580166' (энц. и словар. статьи)
     skip_links_with_anchors = True  # не трогать ссылки содержащие '#', вроде 'РСКД/Статья#якорь'
+    skip_by_text_lengh = True
     prj = 'ruwikisource'
     allowed_header_names: tuple
     wd = None
@@ -81,7 +86,6 @@ class Process:
         }
 
     def process_page(self, page):
-        if page.isRedirectPage(): return
         p = PageMeta(page)
         print(p.title)
 
