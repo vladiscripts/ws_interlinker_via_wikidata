@@ -111,10 +111,14 @@ class Articles(Process):
     def param_Wikipedia(self, p, pname, m_wp_pagename_raw):
         WP, m_wp_pagename = self.wd.get_WPsite(m_wp_pagename_raw)
         if not WP:
+            print(f'{m_wp_pagename_raw} - вероятно нестандартный языковый код страницы')
             return
 
         m_wp_page_item = self.wd.get_item(WP, title=m_wp_pagename)
         if not m_wp_page_item:
+            print('no m_wp_page_item')
+            p.params_to_delete.append(pname)
+            p.summary = 'ссылка на несуществующую страницу Википедии'
             return
 
         topic_item = m_wp_page_item
@@ -141,6 +145,7 @@ class Articles(Process):
         if self.require_ruwiki_sitelink_in_item:
             m_wp_sitelink = m_wp_page_item.sitelinks.get(f'ruwiki')
             if not m_wp_sitelink:
+                print('no ruwiki for m_wp_sitelink')
                 return
             # if m_wp_pagename != m_wp_sitelink.title:  # страница может быть переименована
             #     return
@@ -302,10 +307,10 @@ if __name__ == '__main__':
     #     }
     #     LIMIT 300"""
     # generator = pagegenerators.WikidataSPARQLPageGenerator(query, site=wikidata_site)
+
     args = [
-        '-family:wikisource', '-lang:ru',
-        '-format:"{page.can_title}"',
-        # '-format:3',
+        # '-family:wikisource', '-lang:ru',
+        # '-format:"{page.can_title}"',  # '-format:3',
         # '-ns:0'  # [f'-transcludes:{tpl}' for tpl in tpl_names]
         # '-page:МЭСБЕ/Аахен',
         # '-page:БЭАН/Завет Ветхий и Новый',

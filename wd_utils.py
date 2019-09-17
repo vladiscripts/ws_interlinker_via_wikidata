@@ -142,7 +142,7 @@ class WD_utils:
         claim_topic_subject.setTarget(wditem_subject)
         if self.test_run:
             return
-        itemWD.addClaim(claim_topic_subject, bot=self.as_bot, summary='+main subject; moved from ruwikisource')
+        itemWD.addClaim(claim_topic_subject, bot=self.as_bot, summary='moved from ruwikisource')
         print(f'add main subject in item')
 
     def add_article_in_subjectitem(self, p,
@@ -164,7 +164,7 @@ class WD_utils:
         if self.test_run:
             return
         subject_item.addClaim(claim_described_by, bot=self.as_bot,
-                              summary='+described by source; moved from ruwikisource')
+                              summary='moved from ruwikisource')
         print(f'add item of article in subject item')
 
     def get_item(self, site, item_id: str = None, title: str = None, page=None):
@@ -185,7 +185,14 @@ class WD_utils:
 
     def get_WPsite(self, pagename_raw):
         # .target.title(with_ns=False)
-        lnk_tmp = pwb.Link(pagename_raw, source=self.WP)
+        pagename = None
+        site = self.WP
+        for l in ('be-tarask', 'be-x-old'):
+            if l in pagename_raw:
+                site = pwb.Site(l, 'wikipedia')
+                pagename = pagename_raw.rpartition(l + ':')[-1]
+                break
+        lnk_tmp = pwb.Link(pagename or pagename_raw, source=site)
         lang_tmp = lnk_tmp.parse_site()[1]
         try:
             title_tmp = lnk_tmp.title

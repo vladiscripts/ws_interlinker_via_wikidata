@@ -88,7 +88,8 @@ class Process:
         p = PageMeta(page)
         print(p.title)
 
-        # if p.title != 'Гай Валерий Катулл': return
+        if p.title.startswith('ТСД'):
+            return
 
         p.itemWD = self.wd.get_item(self.wd.WS, page=page)
         if self.works_pages_with_wditems and not p.itemWD:
@@ -121,13 +122,12 @@ class Process:
         for tpl in wikicode.filter_templates():
             p.tpl_data(tpl)
             if p.tpl_name in self.allowed_header_names:
-
-                if 'ТСД' in p.tpl_name:
-                    return
                 if [s for s in wikicode.filter_wikilinks(matches=r'^\[\[Категория:[^|]*?[Пп]еренаправления')]:
+                    print('перенаправление')
                     return
                 # фильтр по размеру текста
-                if p.tpl_name in ('МЭСБЕ', 'БЭАН'):
+                # if p.tpl_name in ('МЭСБЕ', 'БЭАН'):
+                if self.skip_by_text_lengh:
                     tmp = text.replace(str(tpl), '')
                     for s in wikicode.filter_wikilinks(matches=r'^\[\[Категория:'): tmp = tmp.replace(str(s), '')
                     if len(tmp) < 100:
@@ -140,8 +140,7 @@ class Process:
                 if p.params_to_delete:
                     # очищаем параметры
                     mymwp.removeTplParameters(p.tpl, p.params_to_delete)
-                    wiki_util.page_posting(p.page, str(wikicode), 'очистка параметра, перенесено в Викиданные',
-                                           self.test_run)
+                    wiki_util.page_posting(p.page, str(wikicode), p.summary, self.test_run)
                 break
 
     def process_params(self, p):

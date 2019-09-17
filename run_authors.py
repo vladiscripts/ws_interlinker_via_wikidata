@@ -126,14 +126,13 @@ class Author(Process):
         if not m_wp_page_item:
             return
 
-        # if self.require_ruwiki_sitelink_in_item and m_wp_page_item.sitelinks.get('ruwiki'):
-        #     # if m_wp_pagename in m_wp_page_item.sitelinks.values():
-        #     # if m_wp_pagename == ruwiki:
-        #     if m_wp_pagename == m_wp_page_item.sitelinks.get(f'{WP.lang}wiki', ''):
-        #         p.params_to_delete.append(pname)
-        #         return
+        if self.require_ruwiki_sitelink_in_item and m_wp_page_item.sitelinks.get('ruwiki'):
+            #     # if m_wp_pagename in m_wp_page_item.sitelinks.values():
+            #     # if m_wp_pagename == ruwiki:
+            #     if m_wp_pagename == m_wp_page_item.sitelinks.get(f'{WP.lang}wiki', ''):
+            #         p.params_to_delete.append(pname)
+            #         return
 
-        if self.require_ruwiki_sitelink_in_item:
             sitelink = m_wp_page_item.sitelinks.get(f'{WP.lang}wiki')
             if sitelink:
                 if m_wp_pagename == sitelink.title:
