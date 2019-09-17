@@ -72,9 +72,8 @@ class Process:
     #                 'РСКД', 'РЭСБ', 'САР', 'ТСД1', 'ТСД2', 'ТСД3', 'ТЭ1', 'ЭЛ', 'ЭСБЕ', 'ЭСГ']
 
     def __init__(self, test_run=False):
-        self.as_bot = True
         self.test_run = test_run
-        self.wd = WD_utils(as_bot=self.as_bot, test_run=test_run)
+        self.wd = WD_utils(as_bot=True, test_run=test_run)
         self.wd.enc_meta = get_other_sources()
         # self.allowed_header_names.extend(self.enc_prefixes)
         self.enc_prefixes = tuple(self.wd.enc_meta.keys())
