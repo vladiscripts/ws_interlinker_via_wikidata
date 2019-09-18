@@ -327,7 +327,11 @@ if __name__ == '__main__':
         # '-titleregex:(%s)' % '|'.join(d.enc_prefixes)
         # '-intersect',
     ]
-    gen = wiki_util.get_pages(args)
-    # gen = wiki_util.get_pages(base_args, ['-catr:Авторы:Ручная_ссылка'], intersect=False)
-    for page in gen:
-        d.process_page(page)
+
+    # args = base_args + sys.argv[1:]
+    # gen = wiki_util.get_pages(args)
+    # # gen = wiki_util.get_pages(base_args, ['-catr:Авторы:Ручная_ссылка'], intersect=False)
+    # for page in gen:
+    #     d.process_page(page)
+
+    d.pagegenerator_and_run()

@@ -379,7 +379,9 @@ if __name__ == '__main__':
         # '-intersect',
         # '-file:/tmp/list.txt',
     ]
-    gen = wiki_util.get_pages(args)
-    # gen = wiki_util.get_pages(base_args, ['-catr:Авторы:Ручная_ссылка'], intersect=False)
-    for page in gen:
-        d.process_page(page)
+    # gen = wiki_util.get_pages(args)
+    # # gen = wiki_util.get_pages(base_args, ['-catr:Авторы:Ручная_ссылка'], intersect=False)
+    # for page in gen:
+    #     d.process_page(page)
+
+    d.pagegenerator_and_run()
