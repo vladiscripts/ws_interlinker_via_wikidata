@@ -52,15 +52,10 @@ def get_pages(args: list = None, test_pages: list = None):
     # from wd_utils import props
     from wd_utils import WD_utils
 
-    if test_pages:
-        gen = (pwb.Page(WD_utils.WP, title) for title in test_pages if title and title.strip() != '')
-    else:
-        # args = ['-family:wikipedia', '-lang:en', '-ns:0'] + [f'-transcludes:{tpl}' for tpl in tpl_names]
-        gen_factory = pwb.pagegenerators.GeneratorFactory()
-        local_args = pwb.handle_args(args)
-        for arg in local_args:
-            gen_factory.handleArg(arg)
-        gen = gen_factory.getCombinedGenerator(
-            preload=False
-        )
+    # args = ['-family:wikipedia', '-lang:en', '-ns:0'] + [f'-transcludes:{tpl}' for tpl in tpl_names]
+    gen_factory = pwb.pagegenerators.GeneratorFactory()
+    local_args = pwb.handle_args(args)
+    for arg in local_args:
+        gen_factory.handleArg(arg)
+    gen = gen_factory.getCombinedGenerator(preload=False)
     return gen
