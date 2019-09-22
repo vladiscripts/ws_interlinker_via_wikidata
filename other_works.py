@@ -143,7 +143,7 @@ class TextWorks(Process):
         if self.skip_wd_links_to_disambigs:
             for e in topic_item.claims.get(self.wd.item_type, []):
                 if e.target and e.target.id == self.wd.disambig:
-                    print('ссылка на дизамбиг')
+                    pwb.stdout('ссылка на дизамбиг')
                     return
 
         if self.require_ruwiki_sitelink_in_item:
@@ -160,7 +160,7 @@ class TextWorks(Process):
         if self.make_wd_links:
             if self.skip_existing_topics:
                 if self.wd.another_id_in_item_topics(p.itemWD, m_wp_page_item.id):
-                    print('Item уже имеет темы, отличные от ручной ссылки. Возможно в ручной ссылке - дизамбиг')
+                    pwb.stdout('Item уже имеет темы, отличные от ручной ссылки. Возможно в ручной ссылке - дизамбиг')
                     return
 
             if not self.wd.id_in_item_topics(p.itemWD, m_wp_page_item.id):

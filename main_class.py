@@ -80,14 +80,14 @@ class Process:
 
     def process_page(self, page):
         p = PageMeta(page)
-        print(p.title)
+        pwb.stdout(p.title)
 
         if p.title.startswith('ТСД'):
             return
 
         p.itemWD = self.wd.get_item(self.wd.WS, page=page)
         if self.works_pages_with_wditems and not p.itemWD:
-            print('no p.itemWD')
+            pwb.stdout('no p.itemWD')
             return
 
         # self.page = pywikibot.Page(self.wd.WS, title)
@@ -95,7 +95,7 @@ class Process:
 
         # пропускать страницы-перенаправления
         if re_cat_redirect.search(page.text):
-            print('перенаправление')
+            pwb.stdout('перенаправление')
             return
 
         # работать по энциклопедическая статья и словарная статья
@@ -107,7 +107,7 @@ class Process:
                 #             is_article = True
                 # if not is_article:
                 if e.target.id not in self.wd.types_to_search:
-                    print('не словарная статья')
+                    pwb.stdout('не словарная статья')
                     return
 
         text = p.page.get()
@@ -117,7 +117,7 @@ class Process:
             p.tpl_data(tpl)
             if p.tpl_name in self.allowed_header_names:
                 if [s for s in wikicode.filter_wikilinks(matches=r'^\[\[Категория:[^|]*?[Пп]еренаправления')]:
-                    print('перенаправление')
+                    pwb.stdout('перенаправление')
                     return
                 # фильтр по размеру текста
                 # if p.tpl_name in ('МЭСБЕ', 'БЭАН'):
@@ -125,7 +125,7 @@ class Process:
                     tmp = text.replace(str(tpl), '')
                     for s in wikicode.filter_wikilinks(matches=r'^\[\[Категория:'): tmp = tmp.replace(str(s), '')
                     if len(tmp) < 100:
-                        print('размер текста < 100')
+                        pwb.stdout('размер текста < 100')
                         return
 
                 # if p.is_author_tpl is None: return

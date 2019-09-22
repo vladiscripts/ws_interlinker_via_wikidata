@@ -112,7 +112,8 @@ class WD_utils:
                                m_wp_page_item: ItemPage) -> bool:
         if self.id_in_item_describes(rootpagename, itemWD.id, m_wp_page_item) \
                 and self.id_in_item_topics(itemWD, m_wp_page_item.id):
-            print(f'значение параметра ("{m_wp_pagename}") совпадает с item (label {m_wp_page_item.labels.get("ru")})')
+            pwb.stdout(
+                f'значение параметра ("{m_wp_pagename}") совпадает с item (label {m_wp_page_item.labels.get("ru")})')
             return True
 
     # def is_item_of_disambig(self, item: ItemPage) -> bool:
@@ -143,7 +144,7 @@ class WD_utils:
         if self.test_run:
             return
         itemWD.addClaim(claim_topic_subject, bot=self.as_bot, summary='moved from ruwikisource')
-        print(f'add main subject in item')
+        pwb.stdout(f'added main subject in item')
 
     def add_article_in_subjectitem(self, p,
                                    subject_item: ItemPage,
@@ -165,7 +166,7 @@ class WD_utils:
             return
         subject_item.addClaim(claim_described_by, bot=self.as_bot,
                               summary='moved from ruwikisource')
-        print(f'add item of article in subject item')
+        pwb.stdout(f'added item of article in subject item')
 
     # def get_item(self, site, item_id: str = None, title: str = None, page=None):
     #     item = None

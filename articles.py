@@ -57,13 +57,13 @@ class Articles(Process):
     #     """
     #     m_pagename_enc = self.wd.enc_meta[pname].get('titleVT')  # 'Британника' и т.п.
     #     if not m_pagename_enc:
-    #         print('нет m_pagename_enc')
+    #         pwb.stdout('нет m_pagename_enc')
     #         return
     #     m_pagename_enc = m_pagename_enc.replace('$1', m_enc)
     #
     #     topic_items = self.wd.get_topic_items(p.itemWD)
     #     if not topic_items:
-    #         # print('темы не указаны в свойсте. Надо создать, пока пропускаем')
+    #         # pwb.stdout('темы не указаны в свойсте. Надо создать, пока пропускаем')
     #         return
     #
     #     # todo: исключить страницы /ДО, перенаправления, страницы произведений не энциклопедий
@@ -73,7 +73,7 @@ class Articles(Process):
     #     # if not m_enc_article_page.exists():  return
     #     m_enc_article_item = self.wd.get_item(self.wd.WS, page=m_enc_article_page)
     #     if not m_enc_article_item:
-    #         print('нет m_enc_article_item')
+    #         pwb.stdout('нет m_enc_article_item')
     #         return
     #
     #     # todo Создаются дубли описаний в темах. Проверить в unittest
@@ -86,7 +86,7 @@ class Articles(Process):
     #         if self.skip_wd_links_to_disambigs:
     #             for e in topic_item.claims.get(self.wd.item_type, []):
     #                 if e.target and e.target.id == self.wd.disambig:
-    #                     print('ссылка на дизамбиг')
+    #                     pwb.stdout('ссылка на дизамбиг')
     #                     return
     #
     #     # todo создаёт дубли, или это было из-за повторного использования вд-свойств
@@ -111,18 +111,18 @@ class Articles(Process):
     def param_Wikipedia(self, p, pname, m_wp_pagename_raw):
         WP, m_wp_pagename = self.wd.get_WPsite(m_wp_pagename_raw)
         if not WP:
-            print(f'{m_wp_pagename_raw} - вероятно нестандартный языковый код страницы')
+            pwb.stdout(f'{m_wp_pagename_raw} - вероятно нестандартный языковый код страницы')
             return
 
         m_wp_page = wiki_util.get_wikipage(WP, title=m_wp_pagename)
         if not m_wp_page.exists():
-            print('no m_wp_page_item')
+            pwb.stdout('no m_wp_page_item')
             wiki_util.remove_param(p, pname, value_only=True)
             return
 
         m_wp_page_item = topic_item = self.wd.get_item(WP, page=m_wp_page)
         if not m_wp_page_item:
-            print('no m_wp_page_item')
+            pwb.stdout('no m_wp_page_item')
             return
 
         # if m_wp_page_item.sitelinks.get('ruwiki'):
@@ -141,13 +141,13 @@ class Articles(Process):
         if self.skip_wd_links_to_disambigs:
             for e in topic_item.claims.get(self.wd.item_type, []):
                 if e.target and e.target.id == self.wd.disambig:
-                    print('ссылка на дизамбиг')
+                    pwb.stdout('ссылка на дизамбиг')
                     return
 
         if self.require_ruwiki_sitelink_in_item:
             m_wp_sitelink = m_wp_page_item.sitelinks.get(f'ruwiki')
             if not m_wp_sitelink:
-                print('no ruwiki for m_wp_sitelink')
+                pwb.stdout('no ruwiki for m_wp_sitelink')
                 return
             # if m_wp_pagename != m_wp_sitelink.title:  # страница может быть переименована
             #     return
@@ -159,7 +159,8 @@ class Articles(Process):
         if self.make_wd_links:
             if self.skip_existing_topics:
                 if self.wd.another_id_in_item_topics(p.itemWD, m_wp_page_item.id):
-                    print('Item уже имеет темы, отличные от ручной ссылки. Возможно в ручной ссылке - дизамбиг')
+                    pwb.stdout(
+                        'Item уже имеет темы, отличные от ручной ссылки. Возможно в ручной ссылке - дизамбиг')
                     return
 
             if not self.wd.id_in_item_topics(p.itemWD, m_wp_page_item.id):
