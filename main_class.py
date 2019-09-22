@@ -27,23 +27,15 @@ re_remove_tag_commment = re.compile(r'<!--.*?(?:-->|$)', flags=re.DOTALL)
 
 
 class PageMeta:
-    # do_cause = None
-    page: pwb.page.Page
-    itemWD: pwb.ItemPage
-    title: str
-    rootpagename: str
-    subpagename: str
-    tpl = None
-    tpl_name: str
-    is_author_tpl = False
-    params_to_delete = []
-    summary = 'очистка параметра, перенесено в Викиданные'
-
     def __init__(self, page: pwb.page.Page):
+        self.is_author_tpl = False
         self.page = wiki_util.get_wikipage(page.site, page=page)
         self.title = page.title()
         self.rootpagename, self.subpagename = wiki_util.parse_pagename(self.title)
         self.params_to_delete = []
+        # do_cause = None
+        self.tpl = None
+        self.tpl_name = None
 
     def tpl_data(self, tpl):
         self.tpl = tpl
