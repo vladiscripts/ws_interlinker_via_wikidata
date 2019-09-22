@@ -167,20 +167,38 @@ class WD_utils:
                               summary='moved from ruwikisource')
         print(f'add item of article in subject item')
 
-    def get_item(self, site, item_id: str = None, title: str = None, page=None):
+    # def get_item(self, site, item_id: str = None, title: str = None, page=None):
+    #     item = None
+    #     try:
+    #         if item_id:
+    #             item = pwb.ItemPage(site, item_id)
+    #         else:
+    #             if title:
+    #                 page = self.get_page(site, title=title)
+    #             elif page:
+    #                 page = self.get_page(site, page=page)
+    #             if page and page.exists():
+    #                 item = page.data_item()
+    #         if item:
+    #             item.get()
+    #     except pwb.exceptions.NoPage:
+    #         item = None
+    #     return item
+
+    def get_item(self, site, item_id: str = None, title: str = None, page: pwb.page.Page = None):
         item = None
-        try:
-            if item_id:
-                item = pwb.ItemPage(site, item_id)
-            elif title:
-                page = wiki_util.get_wikipage(site, title=title)
-                item = page.data_item()
-            elif page:
-                page = wiki_util.get_wikipage(site, page=page)
-                item = page.data_item()
+        if item_id:
+            item = pwb.ItemPage(site, item_id)
+        else:
+            if title:
+                page = pwb.Page(site, title)
+            if page and page.exists():
+                try:
+                    item = page.data_item()
+                except pwb.exceptions.NoPage:
+                    item = None
+        if item:
             item.get()
-        except pwb.exceptions.NoPage:
-            item = None
         return item
 
     def get_WPsite(self, pagename_raw):

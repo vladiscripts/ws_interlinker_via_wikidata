@@ -114,14 +114,16 @@ class Articles(Process):
             print(f'{m_wp_pagename_raw} - вероятно нестандартный языковый код страницы')
             return
 
-        m_wp_page_item = self.wd.get_item(WP, title=m_wp_pagename)
-        if not m_wp_page_item:
+        m_wp_page = wiki_util.get_wikipage(WP, title=m_wp_pagename)
+        if not m_wp_page.exists():
             print('no m_wp_page_item')
-            p.params_to_delete.append(pname)
-            p.summary = 'ссылка на несуществующую страницу Википедии'
+            wiki_util.remove_param(p, pname, value_only=True)
             return
 
-        topic_item = m_wp_page_item
+        m_wp_page_item = topic_item = self.wd.get_item(WP, page=m_wp_page)
+        if not m_wp_page_item:
+            print('no m_wp_page_item')
+            return
 
         # if m_wp_page_item.sitelinks.get('ruwiki'):
         # if m_wp_pagename in m_wp_page_item.sitelinks.values():
@@ -133,7 +135,7 @@ class Articles(Process):
         #     return
         #
 
-        topic_item.get()
+        # topic_item.get()
 
         # не работать по ссылкам на дизамбиги
         if self.skip_wd_links_to_disambigs:

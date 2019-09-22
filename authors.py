@@ -72,11 +72,10 @@ class Author(Process):
         # for topic_item in wdlinks:
         topic_sitelink = p.itemWD.sitelinks['ruwikisource']
 
-        # m_enc_article_item = self.wd.get_item(props.WS, title=m_pagename_enc)
-        m_enc_article_page = pwb.Page(self.wd.WS, m_pagename_enc)
+        m_enc_article_page = wiki_util.get_wikipage(self.wd.WS, page=m_pagename_enc)
         if not m_enc_article_page.exists():
             return
-        m_enc_article_item = self.wd.get_item(self.wd.WS, page=m_enc_article_page)
+        m_enc_article_item = m_enc_article_page.data_item()
         if not m_enc_article_item:
             return
 
@@ -121,6 +120,9 @@ class Author(Process):
         WP, m_wp_pagename = self.wd.get_WPsite(m_wp_pagename_raw)
         if not WP:
             return
+
+        # m_enc_article_page = wiki_util.get_wikipage(self.wd.WS, page=m_pagename_enc)
+
 
         m_wp_page_item = self.wd.get_item(WP, title=m_wp_pagename)
         if not m_wp_page_item:
