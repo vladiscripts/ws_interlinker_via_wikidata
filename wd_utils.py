@@ -1,20 +1,22 @@
 #!/usr/bin/env python
 # coding: utf-8
-import requests
-import sqlite3
-import json
-from lxml.html import fromstring
-import re
-from urllib.parse import urlencode, urlparse, parse_qs, parse_qsl, unquote, quote
+# import requests
+# import sqlite3
+# import json
+# from lxml.html import fromstring
+# import re
+# from urllib.parse import urlencode, urlparse, parse_qs, parse_qsl, unquote, quote
 # from vladi_helpers import vladi_helpers
 # from vladi_helpers.file_helpers import csv_save_dict_fromListWithHeaders, json_save_to_file, json_load_from_file
-from typing import Iterable, Union
-import pywikibot as pwb
+# from typing import Iterable, Union
+# import pywikibot as pwb
 from pywikibot.page import ItemPage
 import copy
-import wiki_util
+# import wiki_util
+# from main_class import logging
 # import mwparserfromhell as mwp
-import vladi_helpers.lib_for_mwparserfromhell as mymwp
+# import vladi_helpers.lib_for_mwparserfromhell as mymwp
+from __init__ import *
 
 
 class WD_utils:

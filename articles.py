@@ -19,6 +19,7 @@ from get_other_sources_from_lua import get_other_sources
 # # from vladi_helpers import vladi_helpers
 from vladi_helpers.vladi_helpers import get_item_from_listdict
 from main_class import PageMeta, Process
+from __init__ import *
 
 """Перенос ссылок на энциклопедии/словари из статей в Викиданые и создание там записи."""
 re_cat_redirect = re.compile(r'\[\[Категория:[^]]+?Перенаправления', flags=re.IGNORECASE)

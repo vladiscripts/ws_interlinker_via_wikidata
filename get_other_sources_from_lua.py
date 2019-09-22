@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
-import re
-import pywikibot
+from __init__ import *
 from wd_utils import WD_utils
 
 

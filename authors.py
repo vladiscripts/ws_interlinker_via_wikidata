@@ -1,23 +1,24 @@
 #!/usr/bin/env python
 # coding: utf-8
+from __init__ import *
 # import requests
 # import sqlite3
 # import json
 # from lxml.html import fromstring
-import re
+# import re
 # from urllib.parse import urlencode, urlparse, parse_qs, parse_qsl, unquote, quote
 # from operator import attrgetter
-from typing import Iterable, Union
-import pywikibot as pwb
-import mwparserfromhell as mwp
-import vladi_helpers.lib_for_mwparserfromhell as mymwp
+# from typing import Iterable, Union
+# import pywikibot as pwb
+# import mwparserfromhell as mwp
+# import vladi_helpers.lib_for_mwparserfromhell as mymwp
 import wiki_util
 # from wikidata import wiki_util
-from wd_utils import WD_utils
-from get_other_sources_from_lua import get_other_sources
+# from wd_utils import WD_utils
+# from get_other_sources_from_lua import get_other_sources
 # from vladi_helpers.file_helpers import csv_save_dict_fromListWithHeaders, json_save_to_file, json_load_from_file
 # # from vladi_helpers import vladi_helpers
-from vladi_helpers.vladi_helpers import get_item_from_listdict
+# from vladi_helpers.vladi_helpers import get_item_from_listdict
 from main_class import PageMeta, Process
 
 """Перенос ссылок на энциклопедии/словари из статей в Викиданые и создание там записи."""
