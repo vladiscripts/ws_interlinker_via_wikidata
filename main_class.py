@@ -182,7 +182,7 @@ class Process:
         #     import run_articles
         #     d = run_articles.Articles(test_run=False)
 
-        gen = wiki_util.get_pages(args)
+        gen = wiki_util.pagegenerator(args)
         # gen = wiki_util.get_pages(base_args, ['-catr:Авторы:Ручная_ссылка'], intersect=False)
         for page in gen:
             self.process_page(page)

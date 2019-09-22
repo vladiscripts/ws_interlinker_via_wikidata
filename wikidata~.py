@@ -729,7 +729,7 @@ if __name__ == '__main__':
         # '-cat:Викитека:Ссылка из Викиданных:Викитека',  # страница имеет itemWD
         # '-titleregex:(%s)' % '|'.join(d.enc_prefixes)
     ]
-    gen = wiki_util.get_pages(base_args, args, intersect=True)
+    gen = wiki_util.pagegenerator(base_args, args, intersect=True)
     # pages = tuple(p.title() for p in gen)
     for page in gen:
         # d.init_page(page)
