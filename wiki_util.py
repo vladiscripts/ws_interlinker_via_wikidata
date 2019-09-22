@@ -59,3 +59,21 @@ def get_pages(args: list = None, test_pages: list = None):
         gen_factory.handleArg(arg)
     gen = gen_factory.getCombinedGenerator(preload=False)
     return gen
+
+
+def remove_param(p, pname: str, value_only=False):
+    mymwp.removeTplParameters(p.tpl, pname, remove_value_only=value_only)
+    if value_only:
+        p.params_to_value_clear.append(pname)
+    else:
+        p.params_to_delete.append(pname)
+
+
+def make_summary(p):
+    _summary = []
+    if p.params_to_delete:
+        _summary.append(f'ссылка перенесена в Викиданные (%s)' % ','.join(p.params_to_delete))
+    if p.params_to_value_clear:
+        _summary.append(f'ссылка на несущ. страницу (%s)' % ','.join(p.params_to_value_clear))
+    summary = '; '.join(_summary)
+    return summary

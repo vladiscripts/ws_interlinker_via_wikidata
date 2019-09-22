@@ -167,7 +167,7 @@ class Articles(Process):
 
         if self.wd.id_in_item_topics(p.itemWD, m_wp_page_item.id) \
                 and self.wd.id_in_item_describes(p, p.itemWD.id, m_wp_page_item):
-            p.params_to_delete.append(pname)
+            wiki_util.remove_param(p, pname)
             return
 
         # # очистить значение ВИКИПЕДИЯ

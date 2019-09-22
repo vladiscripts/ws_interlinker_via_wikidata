@@ -33,6 +33,7 @@ class PageMeta:
         self.title = page.title()
         self.rootpagename, self.subpagename = wiki_util.parse_pagename(self.title)
         self.params_to_delete = []
+        self.params_to_value_clear = []
         # do_cause = None
         self.tpl = None
         self.tpl_name = None
@@ -130,10 +131,10 @@ class Process:
                 # if p.is_author_tpl is None: return
                 p = self.process_params(p)
 
-                if p.params_to_delete:
-                    # очищаем параметры
-                    mymwp.removeTplParameters(p.tpl, p.params_to_delete)
-                    wiki_util.page_posting(p.page, str(wikicode), p.summary, self.test_run)
+                if p.params_to_delete or p.params_to_value_clear:
+                    # очищаем параметры, постим страницу
+                    summary = wiki_util.make_summary(p)
+                    wiki_util.page_posting(p.page, str(wikicode), summary, self.test_run)
                 break
 
     def process_params(self, p):
