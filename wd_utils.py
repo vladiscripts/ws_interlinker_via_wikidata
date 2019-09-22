@@ -98,9 +98,9 @@ class WD_utils:
         if self.get_claims_topics(item) and not self.id_in_item_topics(item, search_id):
             return True
 
-    def param_value_equal_item(self, rootpagename: str, m_wp_pagename: str, itemWD: ItemPage,
+    def param_value_equal_item(self, p, m_wp_pagename: str, itemWD: ItemPage,
                                m_wp_page_item: ItemPage) -> bool:
-        if self.id_in_item_describes(rootpagename, itemWD.id, m_wp_page_item) \
+        if self.id_in_item_describes(p, itemWD.id, m_wp_page_item) \
                 and self.id_in_item_topics(itemWD, m_wp_page_item.id):
             pwb.stdout(
                 f'значение параметра ("{m_wp_pagename}") совпадает с item (label {m_wp_page_item.labels.get("ru")})')
