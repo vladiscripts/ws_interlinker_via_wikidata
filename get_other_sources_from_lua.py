@@ -6,7 +6,7 @@ from wd_utils import WD_utils
 
 def get_other_sources():
     def parse_lua_to_dict(WS, page_name, var_name):
-        lua_module = pywikibot.Page(WS, page_name)
+        lua_module = pwb.Page(WS, page_name)
         t = re.sub(r'--.+?\n', '', lua_module.text)
         other_sources_raw = re.search(var_name + r'\s*=\s*{'
                                                  r'((?:\s*{[^}]+?},?\s*)+)'
@@ -33,7 +33,7 @@ def get_other_sources():
     # wikiprojects = parse_lua_to_dict(self.wd.WD, 'Модуль:Навигация-мини', 'projects')
     enc_meta = {}
     for n in other_sources:
-        n['wditem'] = pywikibot.ItemPage(WD_utils.WD, n['id'])
+        n['wditem'] = pwb.ItemPage(WD_utils.WD, n['id'])
         pname = n['argument']
         enc_meta[pname] = n
     return enc_meta

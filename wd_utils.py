@@ -36,18 +36,6 @@ class WD_utils:
     WP = sites['ruwikipedia']
     WD = WS.data_repository()
 
-    def get_claim_topics(self, item: ItemPage) -> list:
-        return item.claims.get(self.topic_subject, [])
-
-    def get_claim_described_by_source(self, item: ItemPage) -> list:
-        return item.claims.get(self.described_by_source, [])
-
-    def get_claim_item_type(self, item: ItemPage) -> list:
-        return item.claims.get(self.item_type, [])
-
-    def get_qualifiers_dedicated_article(self, c: pwb.Claim) -> list:
-        return c.qualifiers.get(self.dedicated_article, [])
-
     _claim_main_subject = pwb.Claim(WD, topic_subject)
     _claim_described_by_source = pwb.Claim(WD, described_by_source)
     _claim_dedicated_article = pwb.Claim(WD, dedicated_article)
@@ -59,7 +47,7 @@ class WD_utils:
         self.test_run = test_run
 
     def get_topic_items(self, itemWD):
-        return [i.target for i in itemWD.claims.get(self.topic_subject, []) if isinstance(i.target, ItemPage)]
+        return [i.target for i in self.get_claims_topics(itemWD) if isinstance(i.target, ItemPage)]
 
     def claim_main_subject(self):
         # return pwb.Claim(self.WD, self.topic_subject)
@@ -79,12 +67,12 @@ class WD_utils:
             if i.id == item_id:
                 return True
 
-    def link_(self, item_id: str = None, title: str = None):
-        items = self.get_items(itemWD, is_author_tpl)
-        if item_id:
-            for i in items:
-                if i.id == item_id:
-                    return True
+    # def link_(self, item_id: str = None, title: str = None):
+    #     items = self.get_items(itemWD, is_author_tpl)
+    #     if item_id:
+    #         for i in items:
+    #             if i.id == item_id:
+    #                 return True
 
     def id_in_item_describes(self, p, search_id: str, item: ItemPage) -> bool:
         rootpagename = p.rootpagename
@@ -92,7 +80,7 @@ class WD_utils:
             rootpagename = 'Лентапедия2'
         enc_item = self.enc_meta[rootpagename]['wditem']
         if enc_item:
-            for c in self.get_claim_described_by_source(item):
+            for c in self.get_claims_described_by_source(item):
                 if enc_item.id == c.target.id:
                     for q in c.qualifiers.get(self.dedicated_article, []):
                         if q.target.id == search_id:
@@ -100,14 +88,14 @@ class WD_utils:
 
     def id_in_item_topics(self, item: ItemPage, search_id: str) -> bool:
         _is = False
-        for i in self.get_claim_topics(item):
+        for i in self.get_claims_topics(item):
             if i.target and i.target.id == search_id:
                 _is = True
                 break
         return _is
 
     def another_id_in_item_topics(self, item: ItemPage, search_id: str) -> bool:
-        if self.get_claim_topics(item) and not self.id_in_item_topics(item, search_id):
+        if self.get_claims_topics(item) and not self.id_in_item_topics(item, search_id):
             return True
 
     def param_value_equal_item(self, rootpagename: str, m_wp_pagename: str, itemWD: ItemPage,
@@ -123,13 +111,13 @@ class WD_utils:
     #         if e.target and e.target.id == self.disambig:
     #             return True
 
-    def _join_items_article_and_subject(self, pname: str, subject_item_id: str, target_item: ItemPage):
-        # создать ссылку на элемент темы
-        wditem_subject = self.add_main_subject(target_id=subject_item_id)
-
-        # создать "описывается в источниках" в элементе темы
-        if wditem_subject:
-            self.add_article_in_subjectitem(wditem_subject, pname, target_item)
+    # def _join_items_article_and_subject(self, pname: str, subject_item_id: str, target_item: ItemPage):
+    #     # создать ссылку на элемент темы
+    #     wditem_subject = self.add_main_subject(target_id=subject_item_id)
+    #
+    #     # создать "описывается в источниках" в элементе темы
+    #     if wditem_subject:
+    #         self.add_article_in_subjectitem(wditem_subject, pname, target_item)
 
     def add_main_subject(self, itemWD: ItemPage, target_id: str = None, target: ItemPage = None):
         """ создать ссылку на элемент темы """
@@ -225,3 +213,16 @@ class WD_utils:
         if not WP:
             WP = self.sites[lang_tmp + 'wikipedia'] = pwb.Site(lang_tmp, 'wikipedia')
         return WP, title_tmp
+
+    # wrappers ---
+    def get_claims_topics(self, item: ItemPage) -> list:
+        return item.claims.get(self.topic_subject, [])
+
+    def get_claims_described_by_source(self, item: ItemPage) -> list:
+        return item.claims.get(self.described_by_source, [])
+
+    def get_claims_item_type(self, item: ItemPage) -> list:
+        return item.claims.get(self.item_type, [])
+
+    def get_qualifiers_dedicated_article(self, c: pwb.Claim) -> list:
+        return c.qualifiers.get(self.dedicated_article, [])

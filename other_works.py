@@ -293,4 +293,3 @@ if __name__ == '__main__':
     # gen = wiki_util.get_pages(base_args, ['-catr:Авторы:Ручная_ссылка'], intersect=False)
     for page in gen:
         d.process_page(page)
-

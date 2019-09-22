@@ -100,7 +100,7 @@ class Process:
         # работать по энциклопедическая статья и словарная статья
         if self.work_only_enc:
             # is_article = False
-            for e in self.wd.get_claim_item_type(p.itemWD):
+            for e in self.wd.get_claims_item_type(p.itemWD):
                 #     for t in e.target.claims.claims.get('P279', []):
                 #         if t.id == self.wd.enc_article_item:
                 #             is_article = True
