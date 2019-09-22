@@ -31,6 +31,7 @@ class PageMeta:
         self.page = wiki_util.get_wikipage(page.site, page=page)
         self.title = page.title()
         self.rootpagename, self.subpagename = wiki_util.parse_pagename(self.title)
+        self.enc_with_trancludes = self.rootpagename in ('ПБЭ', 'ЭЛ')
         self.params_to_delete = []
         self.params_to_value_clear = []
         # do_cause = None
@@ -120,7 +121,7 @@ class Process:
                     return
                 # фильтр по размеру текста
                 # if p.tpl_name in ('МЭСБЕ', 'БЭАН'):
-                if self.skip_by_text_lengh:
+                if self.skip_by_text_lengh and not p.enc_with_trancludes:
                     tmp = text.replace(str(tpl), '')
                     for s in wikicode.filter_wikilinks(matches=r'^\[\[Категория:'): tmp = tmp.replace(str(s), '')
                     if len(tmp) < 100:
