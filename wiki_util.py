@@ -73,5 +73,30 @@ def make_summary(p):
         _summary.append(f'ссылка перенесена в Викиданные (%s)' % ','.join(p.params_to_delete))
     if p.params_to_value_clear:
         _summary.append(f'ссылка на несущ. страницу (%s)' % ','.join(p.params_to_value_clear))
-    summary = '; '.join(_summary)
+    summary = '; '.join(_summary + p.summaries)
     return summary
+
+
+def make_re_wikilink_category(cat_name):
+    return fr'\[\[Категория:{cat_name}(?:\|.*)?\]\]'
+
+
+def make_wikilink_category(cat_name, text=None):
+    if text:
+        return f'[[Категория:{cat_name}|{text}]]'
+    return f'[[Категория:{cat_name}]]'
+
+
+def set_or_remove_category(p, cat_name: str, condition: bool, add_cat: bool = False, log_on_add: str = None):
+    cat_full = make_wikilink_category(cat_name)
+    cat_full_re = make_re_wikilink_category(cat_name)
+    if condition:
+        if add_cat:
+            if log_on_add: pwb.stdout(log_on_add)
+            if not [i for i in p.wikicode.filter_wikilinks(matches=cat_full_re)]:
+                p.wikicode.append(cat_full)
+                p.summaries.append('категория')
+            return
+    else:
+        for i in p.wikicode.filter_wikilinks(matches=cat_full_re):
+            p.wikicode.remove(i)

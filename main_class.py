@@ -37,6 +37,7 @@ class PageMeta:
         # do_cause = None
         self.tpl = None
         self.tpl_name = None
+        self.summaries = []
 
     def tpl_data(self, tpl):
         self.tpl = tpl
@@ -111,19 +112,19 @@ class Process:
                     return
 
         text = p.page.get()
-        wikicode = mwp.parse(text)
+        p.wikicode = mwp.parse(text)
         # wikicode = mwp.parse('[[dffd|2222]][[Категория:апап|  33]]')
-        for tpl in wikicode.filter_templates():
+        for tpl in p.wikicode.filter_templates():
             p.tpl_data(tpl)
             if p.tpl_name in self.allowed_header_names:
-                if [s for s in wikicode.filter_wikilinks(matches=r'^\[\[Категория:[^|]*?[Пп]еренаправления')]:
+                if [s for s in p.wikicode.filter_wikilinks(matches=r'^\[\[Категория:[^|]*?[Пп]еренаправления')]:
                     pwb.stdout('перенаправление')
                     return
                 # фильтр по размеру текста
                 # if p.tpl_name in ('МЭСБЕ', 'БЭАН'):
                 if self.skip_by_text_lengh and not p.enc_with_trancludes:
                     tmp = text.replace(str(tpl), '')
-                    for s in wikicode.filter_wikilinks(matches=r'^\[\[Категория:'): tmp = tmp.replace(str(s), '')
+                    for s in p.wikicode.filter_wikilinks(matches=r'^\[\[Категория:'): tmp = tmp.replace(str(s), '')
                     if len(tmp) < 100:
                         pwb.stdout('размер текста < 100')
                         return
@@ -131,10 +132,10 @@ class Process:
                 # if p.is_author_tpl is None: return
                 p = self.process_params(p)
 
-                if p.params_to_delete or p.params_to_value_clear:
-                    # очищаем параметры, постим страницу
-                    summary = wiki_util.make_summary(p)
-                    wiki_util.page_posting(p.page, str(wikicode), summary, self.test_run)
+                # очищаем параметры, постим страницу
+                # if p.params_to_delete or p.params_to_value_clear:
+                summary = wiki_util.make_summary(p)
+                wiki_util.page_posting(p.page, str(p.wikicode), summary, self.test_run)
                 break
 
     def process_params(self, p):

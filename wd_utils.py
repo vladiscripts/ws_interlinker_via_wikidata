@@ -106,10 +106,10 @@ class WD_utils:
                 f'значение параметра ("{m_wp_pagename}") совпадает с item (label {m_wp_page_item.labels.get("ru")})')
             return True
 
-    # def is_item_of_disambig(self, item: ItemPage) -> bool:
-    #     for e in item.claims.get(self.item_type, []):
-    #         if e.target and e.target.id == self.disambig:
-    #             return True
+    def is_item_of_disambig(self, item: ItemPage) -> bool:
+        for e in self.get_claims_item_type(item):
+            if e.target and e.target.id == self.disambig:
+                return True
 
     # def _join_items_article_and_subject(self, pname: str, subject_item_id: str, target_item: ItemPage):
     #     # создать ссылку на элемент темы

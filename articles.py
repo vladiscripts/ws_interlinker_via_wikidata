@@ -127,12 +127,13 @@ class Articles(Process):
             return
         # topic_item.get()
 
-        # не работать по ссылкам на дизамбиги
-        if self.skip_wd_links_to_disambigs:
-            for e in self.wd.get_claims_item_type(m_wp_page_item):
-                if e.target and e.target.id == self.wd.disambig:
-                    pwb.stdout('ссылка на дизамбиг')
-                    return
+        # ссылки на дизамбиги
+        is_item_of_disambig = self.wd.is_item_of_disambig(m_wp_page_item)
+        wiki_util.set_or_remove_category(p, cat_name='Ручная ссылка на неоднозначность:Википедия',
+                                         condition=is_item_of_disambig, add_cat=self.skip_wd_links_to_disambigs,
+                                         log_on_add='ссылка на дизамбиг')
+        if is_item_of_disambig and self.skip_wd_links_to_disambigs:
+            return  # не работать по ссылкам на дизамбиги
 
         if self.require_ruwiki_sitelink_in_item:
             m_wp_sitelink = m_wp_page_item.sitelinks.get(f'ruwiki')
