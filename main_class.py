@@ -121,13 +121,18 @@ class Process:
                     pwb.stdout('перенаправление')
                     return
                 # фильтр по размеру текста
-                # if p.tpl_name in ('МЭСБЕ', 'БЭАН'):
                 if self.skip_by_text_lengh and not p.enc_with_trancludes:
-                    tmp = text.replace(str(tpl), '')
-                    for s in p.wikicode.filter_wikilinks(matches=r'^\[\[Категория:'): tmp = tmp.replace(str(s), '')
-                    if len(tmp) < 100:
-                        pwb.stdout('размер текста < 100')
-                        return
+                    tmp = text.replace(str(tpl), '')  # убираем шаблон, категории, викиссылки
+                    for s in p.wikicode.filter_wikilinks(matches=r'^\[\[Категория:'):
+                        tmp = tmp.replace(str(s), '').strip()
+                    for s in p.wikicode.filter_wikilinks():
+                        tmp = tmp.replace(str(s), str(s.text)).strip()
+                    if not (p.tpl_name == 'ЭСБЕ' and len(tmp) == 0):  # часть ЭСБЕ - трансклюзии
+                        if len(tmp) < 100:
+                            pwb.stdout('размер текста < 100')
+                            return
+                    else:
+                        pass
 
                 # if p.is_author_tpl is None: return
                 p = self.process_params(p)
