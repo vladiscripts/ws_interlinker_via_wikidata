@@ -33,11 +33,12 @@ re_cat_redirect = re.compile(r'\[\[Категория:[^]]+?Перенаправ
 
 class Articles(Process):
     # works_pages_with_wditems = True  # работать со страницами только имеющими элемент ВД
-    # require_ruwiki_sitelink_in_item = True  # пропускать страницы если у элемента темы нет страницы в ruwiki
+    require_ruwiki_sitelink_in_item = False  # пропускать страницы если у элемента темы нет страницы в ruwiki
     # skip_wd_links_to_disambigs = True  # не работать по словарным ссылкам на дизамбиги
     make_wd_links = True  # линковать ссылки ВД, иначе только удалять параметры дублирующие ВД
     work_only_enc = True  # работать только по элементам типов 'Q17329259', 'Q1580166' (энц. и словар. статьи)
     skip_existing_topics = True  # Item уже имеет темы, отличные от ручной ссылки. Возможно в ручной ссылке - дизамбиг
+    if_no_ruwiki_sitelink_in_item_then_leave_manual_ruwikilink_and_link_items = True
 
     # wikiprojects = parse_lua_to_dict(WS, 'projects')
     # wikiprojects = ['ВИКИПЕДИЯ', ]
@@ -135,11 +136,10 @@ class Articles(Process):
         if is_item_of_disambig and self.skip_wd_links_to_disambigs:
             return  # не работать по ссылкам на дизамбиги
 
-        if self.require_ruwiki_sitelink_in_item:
-            m_wp_sitelink = m_wp_page_item.sitelinks.get(f'ruwiki')
-            if not m_wp_sitelink:
-                pwb.stdout('no ruwiki for m_wp_sitelink')
-                return
+        m_wp_sitelink_ruwiki = m_wp_page_item.sitelinks.get(f'ruwiki')
+        if self.require_ruwiki_sitelink_in_item and not m_wp_sitelink_ruwiki:
+            pwb.stdout('no ruwiki for m_wp_page')
+            return
 
         # добавить свойство "основная тема"
         if self.make_wd_links:
@@ -156,8 +156,10 @@ class Articles(Process):
 
         if self.wd.id_in_item_topics(p.itemWD, m_wp_page_item.id) \
                 and self.wd.id_in_item_describes(p, p.itemWD.id, m_wp_page_item):
-            wiki_util.remove_param(p, pname)
-            return
+            if self.if_no_ruwiki_sitelink_in_item_then_leave_manual_ruwikilink_and_link_items and not m_wp_sitelink_ruwiki:
+                pwb.stdout('no ruwiki for m_wp_page, linking items and leave m_wp_page')
+            else:
+                wiki_util.remove_param(p, pname)
 
     def param_Wikidata(self, p, pname, m_item_id):
         if not p.itemWD:
