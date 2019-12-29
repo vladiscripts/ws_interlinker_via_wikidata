@@ -13,7 +13,7 @@ from __init__ import *
 # import mwparserfromhell as mwp
 # import vladi_helpers.lib_for_mwparserfromhell as mymwp
 import wiki_util
-from wd_utils import WD_utils
+from wd_utils import WD_utils, props
 from get_other_sources_from_lua import get_other_sources
 # from vladi_helpers.file_helpers import csv_save_dict_fromListWithHeaders, json_save_to_file, json_load_from_file
 # from vladi_helpers.vladi_helpers import get_item_from_listdict
@@ -73,8 +73,9 @@ class Process:
         # self.allowed_header_names.extend(self.enc_prefixes)
         self.enc_prefixes = tuple(self.wd.enc_meta.keys())
 
+        # по порядку обработки
         self.pfuncmap = {
-            # 'ВИКИДАННЫЕ': self.param_Wikidata,  # сначала ВИКИДАННЫЕ
+            'ВИКИДАННЫЕ': self.param_Wikidata,  # сначала ВИКИДАННЫЕ
             'ВИКИПЕДИЯ': self.param_Wikipedia,
             'ИЗОБРАЖЕНИЕ': self.param_Image,
         }
@@ -102,12 +103,12 @@ class Process:
         # работать по энциклопедическая статья и словарная статья
         if self.work_only_enc:
             # is_article = False
-            for e in self.wd.get_claims_item_type(p.itemWD):
+            for e in self.wd.get_claims.item_type(p.itemWD):
                 #     for t in e.target.claims.claims.get('P279', []):
                 #         if t.id == self.wd.enc_article_item:
                 #             is_article = True
                 # if not is_article:
-                if e.target.id not in self.wd.types_to_search:
+                if e.target.id not in props.types_to_search:
                     pwb.stdout('не словарная статья')
                     return
 
@@ -178,6 +179,10 @@ class Process:
 
     @abstractmethod
     def param_Image(self, p, pname, m_wp_pagename_raw):
+        pass
+
+    @abstractmethod
+    def param_Wikidata(self, p, pname, m_wp_pagename_raw):
         pass
 
     def pagegenerator_and_run(self):

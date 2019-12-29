@@ -11,55 +11,31 @@
 # from typing import Iterable, Union
 # import pywikibot as pwb
 from pywikibot.page import ItemPage
-import copy
 # import wiki_util
 # from main_class import logging
 # import mwparserfromhell as mwp
 # import vladi_helpers.lib_for_mwparserfromhell as mymwp
 from __init__ import *
+from wd_work import props, Get_claims, Claim_instance
 
 
 class WD_utils:
-    item_type = 'P31'
-    types_to_search = 'Q13433827', 'Q17329259', 'Q1580166'  # энц. и словар. статья
-    enc_article_item = 'Q10389811'  # энц. статья
-    topic_subject = 'P921'  # основная тема
-    described_by_source = 'P1343'  # описывается в источниках
-    dedicated_article = 'P805'  # тема утверждения
-    disambig = 'Q4167410'  # дизамбиг, страница значений в проекте Викимедиа
-
-    sites = {
-        'ruwikisource': pwb.Site('ru', 'wikisource', user='TextworkerBot'),
-        'ruwikipedia': pwb.Site('ru', 'wikipedia', user='TextworkerBot'),
-    }
+    enc_meta = {}
+    user = 'TextworkerBot'
+    sites = {'ruwikisource': pwb.Site('ru', 'wikisource', user=user),
+             'ruwikipedia': pwb.Site('ru', 'wikipedia', user=user)}
     WS = sites['ruwikisource']
     WP = sites['ruwikipedia']
     WD = WS.data_repository()
 
-    _claim_main_subject = pwb.Claim(WD, topic_subject)
-    _claim_described_by_source = pwb.Claim(WD, described_by_source)
-    _claim_dedicated_article = pwb.Claim(WD, dedicated_article)
-
-    enc_meta = {}
-
     def __init__(self, as_bot=True, test_run=False):
         self.as_bot = as_bot
         self.test_run = test_run
+        self.get_claims = Get_claims()
+        self.claim_instance = Claim_instance(self.WD)
 
     def get_topic_items(self, itemWD):
-        return [i.target for i in self.get_claims_topics(itemWD) if isinstance(i.target, ItemPage)]
-
-    def claim_main_subject(self):
-        # return pwb.Claim(self.WD, self.topic_subject)
-        return copy.deepcopy(self._claim_main_subject)
-
-    def claim_described_by_source(self):
-        # return pwb.Claim(WD, self.described_by_source)
-        return copy.deepcopy(self._claim_described_by_source)
-
-    def claim_dedicated_article(self):
-        # return pwb.Claim(WD, self.dedicated_article)
-        return copy.deepcopy(self._claim_dedicated_article)
+        return [i.target for i in self.get_claims.topics(itemWD) if isinstance(i.target, ItemPage)]
 
     @staticmethod
     def link(item_id: str, items: Union[list, tuple]):
@@ -80,22 +56,22 @@ class WD_utils:
             rootpagename = 'Лентапедия2'
         enc_item = self.enc_meta[rootpagename]['wditem']
         if enc_item:
-            for c in self.get_claims_described_by_source(item):
+            for c in self.get_claims.described_by_source(item):
                 if enc_item.id == c.target.id:
-                    for q in c.qualifiers.get(self.dedicated_article, []):
+                    for q in self.get_claims.get_qualifiers_dedicated_article(c):
                         if q.target.id == search_id:
                             return True
 
     def id_in_item_topics(self, item: ItemPage, search_id: str) -> bool:
         _is = False
-        for i in self.get_claims_topics(item):
+        for i in self.get_claims.topics(item):
             if i.target and i.target.id == search_id:
                 _is = True
                 break
         return _is
 
     def another_id_in_item_topics(self, item: ItemPage, search_id: str) -> bool:
-        if self.get_claims_topics(item) and not self.id_in_item_topics(item, search_id):
+        if self.get_claims.topics(item) and not self.id_in_item_topics(item, search_id):
             return True
 
     def param_value_equal_item(self, p, m_wp_pagename: str, itemWD: ItemPage,
@@ -107,8 +83,8 @@ class WD_utils:
             return True
 
     def is_item_of_disambig(self, item: ItemPage) -> bool:
-        for e in self.get_claims_item_type(item):
-            if e.target and e.target.id == self.disambig:
+        for e in self.get_claims.item_type(item):
+            if e.target and e.target.id == props.disambig:
                 return True
 
     # def _join_items_article_and_subject(self, pname: str, subject_item_id: str, target_item: ItemPage):
@@ -121,8 +97,8 @@ class WD_utils:
 
     def add_main_subject(self, itemWD: ItemPage, target_id: str = None, target: ItemPage = None):
         """ создать ссылку на элемент темы """
-        claim_topic_subject = self.claim_main_subject()
-        pwb.Claim(self.WD, self.topic_subject)
+        claim_topic_subject = self.claim_instance.claim_main_subject()
+        pwb.Claim(self.WD, props.topic_subject)
         if target_id:
             wditem_subject = pwb.ItemPage(self.WD, target_id)
         elif target:
@@ -136,26 +112,23 @@ class WD_utils:
         itemWD.addClaim(claim_topic_subject, bot=self.as_bot, summary='moved from ruwikisource')
         pwb.stdout(f'added main subject in item')
 
-    def add_article_in_subjectitem(self, p,
-                                   subject_item: ItemPage,
-                                   target_item: ItemPage):
+    def add_article_in_subjectitem(self, p, subject_item: ItemPage, target_item: ItemPage):
         """ создать "описывается в источниках" в элементе темы """
         # s = get_item_from_listdict(other_sources, 'argument', m_item_id)
         # [i.target for i in self.wd_item.claims.get(self.main_subject, [])]
-        claim_described_by = self.claim_described_by_source()
+        claim_described_by = self.claim_instance.claim_described_by_source()
         rootpagename = p.rootpagename
         if p.rootpagename == 'Лентапедия' and p.title.endswith('/Полная версия'):
             rootpagename = 'Лентапедия2'
         target = self.enc_meta[rootpagename]['wditem']
         claim_described_by.setTarget(target)
-        qualifier = self.claim_dedicated_article()
+        qualifier = self.claim_instance.claim_dedicated_article()
         # qualifier_target = pwb.ItemPage(self.WD, m_item_id)
         qualifier.setTarget(target_item)
         claim_described_by.addQualifier(qualifier)
         if self.test_run:
             return
-        subject_item.addClaim(claim_described_by, bot=self.as_bot,
-                              summary='moved from ruwikisource')
+        subject_item.addClaim(claim_described_by, bot=self.as_bot, summary='moved from ruwikisource')
         pwb.stdout(f'added item of article in subject item')
 
     # def get_item(self, site, item_id: str = None, title: str = None, page=None):
@@ -179,6 +152,9 @@ class WD_utils:
     def get_item(self, site, item_id: str = None, title: str = None, page: pwb.page.Page = None):
         item = None
         if item_id:
+            if not pwb.ItemPage.is_valid_id(item_id):
+                pwb.stdout(f'not valid {item_id}')
+                return None
             item = pwb.ItemPage(site, item_id)
         else:
             if title:
@@ -214,15 +190,4 @@ class WD_utils:
             WP = self.sites[lang_tmp + 'wikipedia'] = pwb.Site(lang_tmp, 'wikipedia')
         return WP, title_tmp
 
-    # wrappers ---
-    def get_claims_topics(self, item: ItemPage) -> list:
-        return item.claims.get(self.topic_subject, [])
-
-    def get_claims_described_by_source(self, item: ItemPage) -> list:
-        return item.claims.get(self.described_by_source, [])
-
-    def get_claims_item_type(self, item: ItemPage) -> list:
-        return item.claims.get(self.item_type, [])
-
-    def get_qualifiers_dedicated_article(self, c: pwb.Claim) -> list:
-        return c.qualifiers.get(self.dedicated_article, [])
+    # def create_item_article(self):

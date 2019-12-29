@@ -132,7 +132,7 @@ class Articles(Process):
         is_item_of_disambig = self.wd.is_item_of_disambig(m_wp_page_item)
         wiki_util.set_or_remove_category(p, cat_name='Ручная ссылка на неоднозначность:Википедия',
                                          condition=is_item_of_disambig, add_cat=self.skip_wd_links_to_disambigs,
-                                         log_on_add='ссылка на дизамбиг')
+                                         log_on_add=f'{pname}: ссылка на дизамбиг')
         if is_item_of_disambig and self.skip_wd_links_to_disambigs:
             return  # не работать по ссылкам на дизамбиги
 
@@ -162,54 +162,41 @@ class Articles(Process):
                 wiki_util.remove_param(p, pname)
 
     def param_Wikidata(self, p, pname, m_item_id):
-        if not p.itemWD:
-            # todo исключить страницы /ДО
-            # подключаем указанный в ручную item
-            # wd_item = pywikibot.ItemPage(WD, 'Q1057344')
-            m_item = pwb.ItemPage(self.wd.WD, m_item_id)
-            m_item.get()
+        m_wp_page_item = self.wd.get_item(self.wd.WD, item_id=m_item_id)
+        if not m_wp_page_item:
+            pwb.stdout('no m_wp_page_item')
+            return
+        # topic_item.get()
 
-            # if prj in wd_item.sitelinks and wd_item.getSitelink(prj) != self.page.title:
+        # ссылки на дизамбиги
+        is_item_of_disambig = self.wd.is_item_of_disambig(m_wp_page_item)
+        wiki_util.set_or_remove_category(p, cat_name='Ручная ссылка на неоднозначность:Викиданные',
+                                         condition=is_item_of_disambig, add_cat=self.skip_wd_links_to_disambigs,
+                                         log_on_add=f'{pname}: ссылка на дизамбиг')
+        if is_item_of_disambig and self.skip_wd_links_to_disambigs:
+            return  # не работать по ссылкам на дизамбиги
 
-            # в ВД другое значение
+        m_wp_sitelink_ruwiki = m_wp_page_item.sitelinks.get(f'ruwiki')
+        if self.require_ruwiki_sitelink_in_item and not m_wp_sitelink_ruwiki:
+            pwb.stdout('no ruwiki for m_wp_page')
+            return
 
-            # todo: исключить страницы /ДО, перенаправления, страницы произведений не энциклопедий
-            # self.wd_item.addClaim.claims.get(self.wd.main_subject)
+        # добавить свойство "основная тема"
+        if self.make_wd_links:
+            if self.skip_existing_topics:
+                if self.wd.another_id_in_item_topics(p.itemWD, m_wp_page_item.id):
+                    pwb.stdout(
+                        'Item уже имеет темы, отличные от ручной ссылки. Возможно в ручной ссылке - дизамбиг')
+                    return
 
-            claim = pwb.Claim(self.wd.WD, self.wd.topic_subject)
-            target = pwb.ItemPage(self.wd.WD, m_item_id)
-            claim.setTarget(target)
-            # m_item.addClaim(claim, bot=self.as_bot, summary='add main subject')
+            if not self.wd.id_in_item_topics(p.itemWD, m_wp_page_item.id):
+                self.wd.add_main_subject(p.itemWD, target=m_wp_page_item)
+            if not self.wd.id_in_item_describes(p, p.itemWD.id, m_wp_page_item):
+                self.wd.add_article_in_subjectitem(p, m_wp_page_item, p.itemWD)
 
-            # # проверяем запись и очищаем параметр
-            # wd_item_ids = [i.id for i in self.wd_item.claims.get(self.wd.main_subject)]
-            # if m_item_id in wd_item_ids:
-            #     r = True
-            #     # mymwp.param_value_clear(tpl, param)
-
-            p.itemWD = p.page.data_item()
-            p.itemWD.get()
-
-        if p.itemWD:
-            # if tplname.lower() == 'обавторе':
-            # wd_itemIds = self.get_wd_links()
-
-            # if self.wdlink(m_item_id, wd_itemIds):
-            if self.wd.link_():
-                # очистить значение ВИКИДАННЫЕ
-                # mymwp.param_value_clear(tpl, param)
-                pass
-            else:
-                # различаются значения в ручном параметре и в ВД
-                pass
-
-            # if self.wd_item.getSitelink('ruwikisource') == m_item_id:
-            #     self.wd_item.setSitelink(sitelink={'site': 'ruwikisource', 'title': title}, summary='sitelink')
-            #     # todo: очистить значение ВИКИДАННЫЕ
-            # else:
-            #     # todo: поставить категорию что getSitelink('ruwikisource') занято др. значением
-            #     pass
-            # # # else:
+        if self.wd.id_in_item_topics(p.itemWD, m_wp_page_item.id) \
+                and self.wd.id_in_item_describes(p, p.itemWD.id, m_wp_page_item):
+            wiki_util.remove_param(p, pname)
 
 
 if __name__ == '__main__':
