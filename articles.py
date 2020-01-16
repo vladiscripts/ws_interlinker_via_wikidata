@@ -1,24 +1,7 @@
 #!/usr/bin/env python
-# coding: utf-8
-# import requests
-# import sqlite3
-# import json
-# from lxml.html import fromstring
-import re
-# from urllib.parse import urlencode, urlparse, parse_qs, parse_qsl, unquote, quote
-# from operator import attrgetter
-from typing import Iterable, Union
-import pywikibot as pwb
-import mwparserfromhell as mwp
-import vladi_helpers.lib_for_mwparserfromhell as mymwp
 import wiki_util
-# from wikidata import wiki_util
-from wd_utils import WD_utils
-from get_other_sources_from_lua import get_other_sources
-# from vladi_helpers.file_helpers import csv_save_dict_fromListWithHeaders, json_save_to_file, json_load_from_file
-# # from vladi_helpers import vladi_helpers
-from vladi_helpers.vladi_helpers import get_item_from_listdict
-from main_class import PageMeta, Process
+from main_class import Process
+# from page_data import PageMeta
 from __init__ import *
 
 """Перенос ссылок на энциклопедии/словари из статей в Викиданые и создание там записи."""
@@ -32,13 +15,13 @@ re_cat_redirect = re.compile(r'\[\[Категория:[^]]+?Перенаправ
 
 
 class Articles(Process):
-    # works_pages_with_wditems = True  # работать со страницами только имеющими элемент ВД
-    require_ruwiki_sitelink_in_item = False  # пропускать страницы если у элемента темы нет страницы в ruwiki
-    # skip_wd_links_to_disambigs = True  # не работать по словарным ссылкам на дизамбиги
-    make_wd_links = True  # линковать ссылки ВД, иначе только удалять параметры дублирующие ВД
-    work_only_enc = True  # работать только по элементам типов 'Q17329259', 'Q1580166' (энц. и словар. статьи)
-    skip_existing_topics = True  # Item уже имеет темы, отличные от ручной ссылки. Возможно в ручной ссылке - дизамбиг
-    if_no_ruwiki_sitelink_in_item_then_leave_manual_ruwikilink_and_link_items = True
+    # works_pages_with_wditems: bool = True  # работать со страницами только имеющими элемент ВД
+    require_ruwiki_sitelink: bool = False  # пропускать страницы если у элемента темы нет страницы в ruwiki
+    # skip_wd_links_to_disambigs: bool = True  # не работать по словарным ссылкам на дизамбиги
+    make_wd_links: bool = True  # линковать ссылки ВД, иначе только удалять параметры дублирующие ВД
+    work_only_enc: bool = True  # работать только по элементам типов 'Q17329259', 'Q1580166' (энц. и словар. статьи)
+    skip_existing_topics: bool = True  # Item уже имеет темы, отличные от ручной ссылки. Возможно в ручной ссылке - дизамбиг
+    if_no_ruwiki_sitelink_in_item_then_leave_manual_ruwikilink_and_link_items: bool = True
 
     # wikiprojects = parse_lua_to_dict(WS, 'projects')
     # wikiprojects = ['ВИКИПЕДИЯ', ]
@@ -48,16 +31,16 @@ class Articles(Process):
     # header_names = ['ОТЕКСТЕ', 'БСЭ1', 'БЭАН', 'БЭЮ', 'ВЭ', 'ГСС', 'ЕЭБЕ', 'МСР', 'МЭСБЕ', 'НЭС', 'ПБЭ', 'РБС',
     #                 'РСКД', 'РЭСБ', 'САР', 'ТСД1', 'ТСД2', 'ТСД3', 'ТЭ1', 'ЭЛ', 'ЭСБЕ', 'ЭСГ']
 
-    def __init__(self, test_run=False):
+    def __init__(self, test_run: bool = False):
         super().__init__()
         self.test_run = test_run
         # self.allowed_header_names = tuple(s.lower() for s in ['отексте'] + list(self.enc_prefixes))
         self.allowed_header_names = tuple(['отексте', 'ЛЕНТАПЕДИЯ'] + list(self.enc_prefixes))
 
-    # def param_encyclopedia(self, p, pname, m_enc):
+    # def param_encyclopedia(self, p, name, m_enc):
     #     """ done для авторов
     #     """
-    #     m_pagename_enc = self.wd.enc_meta[pname].get('titleVT')  # 'Британника' и т.п.
+    #     m_pagename_enc = self.wd.enc_meta[name].get('titleVT')  # 'Британника' и т.п.
     #     if not m_pagename_enc:
     #         pwb.stdout('нет m_pagename_enc')
     #         return
@@ -101,102 +84,57 @@ class Articles(Process):
     #
     #     if self.wd.id_in_item_topics(p.itemWD, m_enc_article_item.id) \
     #             and self.wd.id_in_item_describes(p.rootpagename, p.itemWD.id, m_enc_article_item):
-    #         p.params_to_delete.append(pname)
+    #         p.params_to_delete.append(name)
     #         return
     #
     #     # # linksWD = self.get_wd_links()
     #     # # if not linksWD:
     #     # if not self.wd.link_():
-    #     #     # self.wd.join_items_article_and_subject(pname, m_enc, p.itemWD)
+    #     #     # self.wd.join_items_article_and_subject(name, m_enc, p.itemWD)
     #     #     pass
 
-    def param_Wikipedia(self, p, pname, m_wp_pagename_raw):
-        WP, m_wp_pagename = self.wd.get_WPsite(m_wp_pagename_raw)
-        if not WP:
-            pwb.stdout(f'{m_wp_pagename_raw} - вероятно нестандартный языковый код страницы')
-            return
-
-        m_wp_page = wiki_util.get_wikipage(WP, title=m_wp_pagename)
-        if not m_wp_page.exists():
-            pwb.stdout('no m_wp_page')
-            wiki_util.remove_param(p, pname, value_only=True)
-            return
-
-        m_wp_page_item = self.wd.get_item(WP, page=m_wp_page)
-        if not m_wp_page_item:
-            pwb.stdout('no m_wp_page_item')
-            return
-        # topic_item.get()
-
-        # ссылки на дизамбиги
-        is_item_of_disambig = self.wd.is_item_of_disambig(m_wp_page_item)
-        wiki_util.set_or_remove_category(p, cat_name='Ручная ссылка на неоднозначность:Википедия',
-                                         condition=is_item_of_disambig, add_cat=self.skip_wd_links_to_disambigs,
-                                         log_on_add=f'{pname}: ссылка на дизамбиг')
-        if is_item_of_disambig and self.skip_wd_links_to_disambigs:
-            return  # не работать по ссылкам на дизамбиги
-
-        m_wp_sitelink_ruwiki = m_wp_page_item.sitelinks.get(f'ruwiki')
-        if self.require_ruwiki_sitelink_in_item and not m_wp_sitelink_ruwiki:
-            pwb.stdout('no ruwiki for m_wp_page')
-            return
+    def param_Wikipedia(self, p, param):
+        self.disambigs(p, param)  # не работать по ссылкам на дизамбиги
 
         # добавить свойство "основная тема"
-        if self.make_wd_links:
-            if self.skip_existing_topics:
-                if self.wd.another_id_in_item_topics(p.itemWD, m_wp_page_item.id):
-                    pwb.stdout(
-                        'Item уже имеет темы, отличные от ручной ссылки. Возможно в ручной ссылке - дизамбиг')
-                    return
+        self.wd.add_link_to_main_subject(p, param.item, self.make_wd_links, self.skip_existing_topics)
+        self.chk_wd_links_and_remove_param(p, param)
 
-            if not self.wd.id_in_item_topics(p.itemWD, m_wp_page_item.id):
-                self.wd.add_main_subject(p.itemWD, target=m_wp_page_item)
-            if not self.wd.id_in_item_describes(p, p.itemWD.id, m_wp_page_item):
-                self.wd.add_article_in_subjectitem(p, m_wp_page_item, p.itemWD)
+    def param_Wikidata(self, p, param):
+        self.disambigs(p, param)  # не работать по ссылкам на дизамбиги
 
-        if self.wd.id_in_item_topics(p.itemWD, m_wp_page_item.id) \
-                and self.wd.id_in_item_describes(p, p.itemWD.id, m_wp_page_item):
-            if self.if_no_ruwiki_sitelink_in_item_then_leave_manual_ruwikilink_and_link_items and not m_wp_sitelink_ruwiki:
-                pwb.stdout('no ruwiki for m_wp_page, linking items and leave m_wp_page')
+        # добавить свойство "основная тема"
+        self.wd.add_link_to_main_subject(p, param.item, self.make_wd_links, self.skip_existing_topics)
+        self.chk_wd_links_and_remove_param(p, param)
+
+    def chk_wd_links_and_remove_param(self, p, param):
+        if self.wd.is_id_in_item_topics(p.itemWD, param.item.id) \
+                and self.wd.is_id_in_item_describes(p, p.itemWD.id, param.item):
+            if param.sitelink_ruwiki:
+                wiki_util.remove_param(p, param.name)
+
             else:
-                wiki_util.remove_param(p, pname)
+                if len(param.item.sitelinks) == 1:
+                    pwb.stdout(f'no ru sitelink in WD, has only interwiki sitelink equals manual param, remove manual')
+                    wiki_util.remove_param(p, param.name, value_only=True)
 
-    def param_Wikidata(self, p, pname, m_item_id):
-        m_wp_page_item = self.wd.get_item(self.wd.WD, item_id=m_item_id)
-        if not m_wp_page_item:
-            pwb.stdout('no m_wp_page_item')
-            return
-        # topic_item.get()
+                else:
+                    if self.if_no_ruwiki_sitelink_in_item_then_leave_manual_ruwikilink_and_link_items:
+                        pwb.stdout('no ruwiki for m_wp_page, linking items and leave m_wp_page')
+                    else:
+                        wiki_util.remove_param(p, param.name)
 
-        # ссылки на дизамбиги
-        is_item_of_disambig = self.wd.is_item_of_disambig(m_wp_page_item)
-        wiki_util.set_or_remove_category(p, cat_name='Ручная ссылка на неоднозначность:Викиданные',
-                                         condition=is_item_of_disambig, add_cat=self.skip_wd_links_to_disambigs,
-                                         log_on_add=f'{pname}: ссылка на дизамбиг')
-        if is_item_of_disambig and self.skip_wd_links_to_disambigs:
-            return  # не работать по ссылкам на дизамбиги
-
-        m_wp_sitelink_ruwiki = m_wp_page_item.sitelinks.get(f'ruwiki')
-        if self.require_ruwiki_sitelink_in_item and not m_wp_sitelink_ruwiki:
-            pwb.stdout('no ruwiki for m_wp_page')
-            return
-
-        # добавить свойство "основная тема"
-        if self.make_wd_links:
-            if self.skip_existing_topics:
-                if self.wd.another_id_in_item_topics(p.itemWD, m_wp_page_item.id):
-                    pwb.stdout(
-                        'Item уже имеет темы, отличные от ручной ссылки. Возможно в ручной ссылке - дизамбиг')
-                    return
-
-            if not self.wd.id_in_item_topics(p.itemWD, m_wp_page_item.id):
-                self.wd.add_main_subject(p.itemWD, target=m_wp_page_item)
-            if not self.wd.id_in_item_describes(p, p.itemWD.id, m_wp_page_item):
-                self.wd.add_article_in_subjectitem(p, m_wp_page_item, p.itemWD)
-
-        if self.wd.id_in_item_topics(p.itemWD, m_wp_page_item.id) \
-                and self.wd.id_in_item_describes(p, p.itemWD.id, m_wp_page_item):
-            wiki_util.remove_param(p, pname)
+    def disambigs(self, p, param):
+        """ссылки на дизамбиги"""
+        # is_item_of_disambig = self.wd.is_item_of_disambig(param.item)
+        wiki_util.set_or_remove_category(p, cat_name=f'Ручная ссылка на неоднозначность:{param.name.capitalize()}',
+                                         condition=param.is_item_of_disambig, add_cat=self.skip_wd_links_to_disambigs,
+                                         # log_on_add=f'{param.name}: ссылка на дизамбиг'
+                                         )
+        # if param.is_item_of_disambig and self.skip_wd_links_to_disambigs:
+        #     pwb.stdout(f'{param.name}: ссылка на дизамбиг')
+        #     p.do_skip = True
+        #     return True
 
 
 if __name__ == '__main__':
@@ -244,20 +182,20 @@ if __name__ == '__main__':
         # '-format:"{page.can_title}"',  # '-format:3',
         # '-ns:0'  # [f'-transcludes:{tpl}' for tpl in tpl_names]
         # '-page:ЭСБЕ/Василишки, местечко Виленской губернии',
-        # '-page:БЭАН/Завет Ветхий и Новый',
+        '-page:ЭСБЕ/Вехте',
         # '-titleregex:(%s)' % '|'.join(d.enc_prefixes)
         '-titleregexnot:^ТСД',
         # '-cat:Ручная ссылка:ВЭ',
         # '-cat:Ручная ссылка:ЭСБЕ‎',
-        '-cat:Ручная ссылка:Википедия|Ге',
+        # '-cat:Ручная ссылка:Википедия|Ге',
         # '-cat:Викиданные:Статьи с указанным элементом темы',
         # '-catfilter:Викиданные:Есть элемент темы‎',
         # '-cat:Авторы:Ручная ссылка:ББСРП:Совпадает со ссылкой из Викиданных',
         # '-cat:Ручная ссылка совпадает со ссылкой из Викиданных:БСЭ1',  # done
         # '-cat:Ручная ссылка совпадает со ссылкой из Викиданных:Википедия‎',
         # '-titleregex:(%s)' % '|'.join(d.enc_prefixes)
-        # '-intersect',
-        '-onlyif:P31=Q13433827',
+        # '',
+        # '-onlyif:P31=Q13433827',
         # '-onlyif:P31=Q17329259',
         # '-onlyif:P31=Q1580166',  # энц. и словар. статья
     ]

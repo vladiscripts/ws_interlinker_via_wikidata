@@ -1,25 +1,7 @@
 #!/usr/bin/env python
-# coding: utf-8
 from __init__ import *
-# import requests
-# import sqlite3
-# import json
-# from lxml.html import fromstring
-# import re
-# from urllib.parse import urlencode, urlparse, parse_qs, parse_qsl, unquote, quote
-# from operator import attrgetter
-# from typing import Iterable, Union
-# import pywikibot as pwb
-# import mwparserfromhell as mwp
-# import vladi_helpers.lib_for_mwparserfromhell as mymwp
 import wiki_util
-# from wikidata import wiki_util
-# from wd_utils import WD_utils
-# from get_other_sources_from_lua import get_other_sources
-# from vladi_helpers.file_helpers import csv_save_dict_fromListWithHeaders, json_save_to_file, json_load_from_file
-# # from vladi_helpers import vladi_helpers
-# from vladi_helpers.vladi_helpers import get_item_from_listdict
-from main_class import PageMeta, Process
+from main_class import Process
 
 """Перенос ссылок на энциклопедии/словари из статей в Викиданые и создание там записи."""
 re_cat_redirect = re.compile(r'\[\[Категория:[^]]+?Перенаправления', flags=re.IGNORECASE)
@@ -32,19 +14,20 @@ re_cat_redirect = re.compile(r'\[\[Категория:[^]]+?Перенаправ
 
 
 class Author(Process):
-    # works_pages_with_wditems = True  # работать со страницами только имеющими элемент ВД
-    # require_ruwiki_sitelink_in_item = True  # пропускать страницы если у элемента темы нет страницы в ruwiki
-    # make_wd_links = False  # линковать ссылки ВД, иначе только удалять параметры дублирующие ВД
-    work_only_enc = False  # работать только по элементам типов 'Q17329259', 'Q1580166' (энц. и словар. статьи)
-    # prj = 'ruwikisource'
-    # allowed_header_names = tuple(s.lower() for s in ('обавторе', 'об авторе', 'об_авторе'))
+    # works_pages_with_wditems: bool = True  # работать со страницами только имеющими элемент ВД
+    # require_ruwiki_sitelink_in_item: bool = True  # пропускать страницы если у элемента темы нет страницы в ruwiki
+    # make_wd_links: bool = False  # линковать ссылки ВД, иначе только удалять параметры дублирующие ВД
+    work_only_enc: bool = False  # работать только по элементам типов 'Q17329259', 'Q1580166' (энц. и словар. статьи)
+    # prj: str = 'ruwikisource'
+    # allowed_header_names: bool = tuple(s.lower() for s in ('обавторе', 'об авторе', 'об_авторе'))
     allowed_header_names = ('обавторе', 'об авторе', 'об_авторе', 'Обавторе', 'Об авторе', 'Об_авторе')
-    is_author_tpl = True
+    is_author_tpl: bool = True
+
     # enc_prefixes = []  # ['ЭСБЕ', 'РСКД', 'ВЭ']
     # wd = None
 
     # wikiprojects = parse_lua_to_dict(WS, 'projects')
-    wikiprojects = ['ВИКИПЕДИЯ', ]
+    # wikiprojects = ['ВИКИПЕДИЯ', ]
 
     # header_names = ['ОТЕКСТЕ', 'БСЭ1', 'БЭАН', 'БЭЮ', 'ВЭ', 'ГСС', 'ЕЭБЕ', 'МСР', 'МЭСБЕ', 'НЭС', 'ПБЭ', 'РБС',
     #                 'РСКД', 'РЭСБ', 'САР', 'ТСД1', 'ТСД2', 'ТСД3', 'ТЭ1', 'ЭЛ', 'ЭСБЕ', 'ЭСГ']
@@ -55,13 +38,15 @@ class Author(Process):
     #     self.allowed_header_names = ['обавторе']
     #     # self.allowed_header_names.extend(self.enc_prefixes)
 
-    def param_encyclopedia(self, p, pname, m_enc):
+    def param_encyclopedia(self, p, param):
         """ done для авторов
         """
-        m_pagename_enc = self.wd.enc_meta[pname].get('titleVT')  # 'Британника' и т.п.
-        if not m_pagename_enc:
-            return
-        m_pagename_enc = m_pagename_enc.replace('$1', m_enc)
+        # m_enc=param.pval_raw
+        #
+        # enc_pattern = self.wd.enc_meta[param.pname].get('titleVT')  # 'Британника' и т.п.
+        # if not enc_pattern:
+        #     return
+        # param.pval_raw = enc_pattern.replace('$1', m_enc)
 
         # todo: ручная ссылка без статьи и ВД - Всеволод Михайлович Гаршин
         # todo: исключить страницы /ДО, перенаправления
@@ -73,7 +58,7 @@ class Author(Process):
         # for topic_item in wdlinks:
         topic_sitelink = p.itemWD.sitelinks['ruwikisource']
 
-        m_enc_article_page = wiki_util.get_wikipage(self.wd.WS, page=m_pagename_enc)
+        m_enc_article_page = wiki_util.get_wikipage(self.wd.WS, page=param.pval_raw)
         if not m_enc_article_page.exists():
             return
         m_enc_article_item = m_enc_article_page.data_item()
@@ -82,17 +67,17 @@ class Author(Process):
 
         enc_article_sitelink = m_enc_article_item.sitelinks['ruwikisource']
 
-        if self.skip_links_with_anchors and '#' in m_pagename_enc:
-            if m_pagename_enc.partition('#')[0] == enc_article_sitelink:
+        if self.skip_links_with_anchors and '#' in param.pval_raw:
+            if param.pval_raw.partition('#')[0] == enc_article_sitelink:
                 return
             # else:
             #     self.add_category('[[Категория:Ручная ссылка с якорем отличается от ссылки Викиданных]]')
 
         p.itemWD.get()
-        if not self.wd.id_in_item_describes(pname, m_enc_article_item.id, p.itemWD):
-            self.wd.add_article_in_subjectitem(pname, p.itemWD, m_enc_article_item)
-        if self.wd.id_in_item_describes(pname, m_enc_article_item.id, p.itemWD):
-            p.params_to_delete.append(pname)  # удалить параметр шаблона
+        if not self.wd.is_id_in_item_describes(param.pname, m_enc_article_item.id, p.itemWD):
+            self.wd.add_article_in_subjectitem(param.pname, p.itemWD, m_enc_article_item)
+        if self.wd.is_id_in_item_describes(pname, m_enc_article_item.id, p.itemWD):
+            p.params_to_delete.append(param.pname)  # удалить параметр шаблона
 
             # # проверяем запись и очищаем параметр
             # linksWD = [i.id for i in self.wd_item.claims.get(Props.main_subject)]
@@ -117,29 +102,30 @@ class Author(Process):
             #     # различаются значения в ручном параметре и в ВД
             #     pass
 
-    def param_Wikipedia(self, p, pname, m_wp_pagename_raw):
-        WP, m_wp_pagename = self.wd.get_WPsite(m_wp_pagename_raw)
-        if not WP:
+    def param_Wikipedia(self, p, param):
+        m_wp_pagename_raw = param.pval_raw
+
+        # WP, m_wp_pagename = self.wd.get_WPsite(param.pval_raw)
+        if not param.WP:
             return
 
         # m_enc_article_page = wiki_util.get_wikipage(self.wd.WS, page=m_pagename_enc)
 
-
-        m_wp_page_item = self.wd.get_item(WP, title=m_wp_pagename)
-        if not m_wp_page_item:
+        # param.item = self.wd.get_item(WP, title=m_wp_pagename)
+        if not param.item:
             return
 
-        if self.require_ruwiki_sitelink_in_item and m_wp_page_item.sitelinks.get('ruwiki'):
+        if self.require_ruwiki_sitelink_in_item and param.item.sitelinks.get('ruwiki'):
             #     # if m_wp_pagename in m_wp_page_item.sitelinks.values():
             #     # if m_wp_pagename == ruwiki:
             #     if m_wp_pagename == m_wp_page_item.sitelinks.get(f'{WP.lang}wiki', ''):
             #         p.params_to_delete.append(pname)
             #         return
 
-            sitelink = m_wp_page_item.sitelinks.get(f'{WP.lang}wiki')
+            sitelink = param.item.sitelinks.get(f'{param.WP.lang}wiki')
             if sitelink:
                 if m_wp_pagename == sitelink.title:
-                    p.params_to_delete.append(pname)
+                    p.params_to_delete.append(param.pname)
                     return
 
         # различаются значения в ручном параметре и в ВД
@@ -195,10 +181,10 @@ class Author(Process):
         #         #     pass
         #         # # # else:
 
-    def param_Wikidata(self, p, pname, m_item_id):
+    def param_Wikidata(self, p, param):
         # tpl = self.tpl
-        pname = 'ВИКИДАННЫЕ'
         r = False
+        m_item_id = param.pval_raw
 
         # item_id = pval
         # if p.itemWD:
@@ -269,7 +255,7 @@ class Author(Process):
             #     pass
             # # # else:
 
-    def param_Image(self, p, pname, pvalue):
+    def param_Image(self, p, param):
         # tpl = self.tpl
         # pname = 'ИЗОБРАЖЕНИЕ'
 
@@ -285,8 +271,8 @@ class Author(Process):
 
         for c in p.itemWD.claims.get('P18', ()):  # 'preferred', 'normal'
             if c.target:
-                if c.target.title(with_ns=False) == pvalue:
-                    p.params_to_delete.append(pname)  # очищаем параметр
+                if c.target.title(with_ns=False) == param.pval_raw:
+                    p.params_to_delete.append(param.pname)  # очищаем параметр
                     return
 
         # if self.is_author_tpl:

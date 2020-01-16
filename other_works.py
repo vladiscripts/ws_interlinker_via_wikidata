@@ -159,17 +159,17 @@ class TextWorks(Process):
         # добавить свойство "основная тема"
         if self.make_wd_links:
             if self.skip_existing_topics:
-                if self.wd.another_id_in_item_topics(p.itemWD, m_wp_page_item.id):
+                if self.wd.is_another_id_in_item_topics(p.itemWD, m_wp_page_item.id):
                     pwb.stdout('Item уже имеет темы, отличные от ручной ссылки. Возможно в ручной ссылке - дизамбиг')
                     return
 
-            if not self.wd.id_in_item_topics(p.itemWD, m_wp_page_item.id):
+            if not self.wd.is_id_in_item_topics(p.itemWD, m_wp_page_item.id):
                 self.wd.add_main_subject(p.itemWD, target=m_wp_page_item)
-            if not self.wd.id_in_item_describes(p.rootpagename, p.itemWD.id, m_wp_page_item):
+            if not self.wd.is_id_in_item_describes(p.rootpagename, p.itemWD.id, m_wp_page_item):
                 self.wd.add_article_in_subjectitem(p.rootpagename, m_wp_page_item, p.itemWD)
 
-        if self.wd.id_in_item_topics(p.itemWD, m_wp_page_item.id) \
-                and self.wd.id_in_item_describes(p.rootpagename, p.itemWD.id, m_wp_page_item):
+        if self.wd.is_id_in_item_topics(p.itemWD, m_wp_page_item.id) \
+                and self.wd.is_id_in_item_describes(p.rootpagename, p.itemWD.id, m_wp_page_item):
             p.params_to_delete.append(pname)
             return
 

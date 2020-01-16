@@ -13,22 +13,22 @@ from __init__ import *
 import vladi_helpers.lib_for_mwparserfromhell as mymwp
 
 
-def parse_pagename(title: str):
-    rootpagename, subpagename = None, None
-    if '/' in title:
-        rootpagename, _, subpagename = title.partition('/')
-    return rootpagename, subpagename
+# def parse_pagename(title: str) ->Optional[pwb.Page]:
+#     rootpagename, subpagename = None, None
+#     if '/' in title:
+#         rootpagename, _, subpagename = title.partition('/')
+#     return rootpagename, subpagename
 
 
-# def param_value_clear(tpl, pname, test_run=False, remove_param=False):
+# def param_value_clear(tpl, name, test_run=False, remove_param=False):
 #     if not test_run:
 #         if remove_param:
-#             mymwp.removeTplParameters(tpl, pname)
+#             mymwp.removeTplParameters(tpl, name)
 #         else:
-#             mymwp.param_value_clear(tpl, pname, new_val='\n')
+#             mymwp.param_value_clear(tpl, name, new_val='\n')
 
 
-def page_posting(page, page_text, summary=None, test_run=False):
+def page_posting(page: pwb.Page, page_text: str, summary: str = None, test_run: bool = False) -> None:
     page_text = page_text.strip()
     if page.text != page_text:
         if test_run:
@@ -37,11 +37,12 @@ def page_posting(page, page_text, summary=None, test_run=False):
         page.save(summary)
 
 
-def get_wikipage(site, title=None, page=None):
+def get_wikipage(site: str, title: str = None, page: pwb.Page = None) -> Optional[pwb.Page]:
     page = page or pwb.Page(site, title)
     while page.isRedirectPage():
         page = page.getRedirectTarget()
-    return page
+    if page.exists():
+        return page
 
 
 def pagegenerator(args: list = None):
@@ -59,35 +60,38 @@ def pagegenerator(args: list = None):
     return gen
 
 
-def remove_param(p, pname: str, value_only=False):
-    mymwp.removeTplParameters(p.tpl, pname, remove_value_only=value_only)
+def remove_param(p, name: str, value_only: bool = False) -> None:
+    mymwp.removeTplParameters(p.tpl, name, remove_value_only=value_only)
     if value_only:
-        p.params_to_value_clear.append(pname)
+        p.params_to_value_clear.append(name)
     else:
-        p.params_to_delete.append(pname)
+        p.params_to_delete.append(name)
 
 
-def make_summary(p):
+def make_summary(p) -> str:
     _summary = []
     if p.params_to_delete:
-        _summary.append(f'ссылка перенесена в Викиданные (%s)' % ','.join(p.params_to_delete))
+        lst = ','.join(p.params_to_delete)
+        _summary.append(f'ссылка перенесена в Викиданные ({lst})')
     if p.params_to_value_clear:
-        _summary.append(f'ссылка на несущ. страницу (%s)' % ','.join(p.params_to_value_clear))
+        # _summary.append(f'ссылка на несущ. страницу (%s)' % ','.join(p.params_to_value_clear))
+        lst = ','.join(p.params_to_value_clear)
+        _summary.append(f'очистка параметра ({lst}), перенесено в Викиданные или ссылка на несущ. страницу')
     summary = '; '.join(_summary + p.summaries)
     return summary
 
 
-def make_re_wikilink_category(cat_name):
+def make_re_wikilink_category(cat_name: str) -> str:
     return fr'\[\[Категория:{cat_name}(?:\|.*)?\]\]'
 
 
-def make_wikilink_category(cat_name, text=None):
+def make_wikilink_category(cat_name: str, text: str = None) -> str:
     if text:
         return f'[[Категория:{cat_name}|{text}]]'
     return f'[[Категория:{cat_name}]]'
 
 
-def set_or_remove_category(p, cat_name: str, condition: bool, add_cat: bool = False, log_on_add: str = None):
+def set_or_remove_category(p, cat_name: str, condition: bool, add_cat: bool = False, log_on_add: str = None) -> None:
     cat_full = make_wikilink_category(cat_name)
     cat_full_re = make_re_wikilink_category(cat_name)
     if condition:

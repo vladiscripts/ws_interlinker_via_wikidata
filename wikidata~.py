@@ -387,16 +387,16 @@ class Process:
             topic_item.get()
             # todo создаёт дубли, или это было из-за повторного использования вд-свойствв
             if self.is_author_tpl:
-                if not self.wd.id_in_item_describes(pname, enc_article_item.id, self.itemWD):
+                if not self.wd.is_id_in_item_describes(pname, enc_article_item.id, self.itemWD):
                     self.wd.add_article_in_subjectitem(pname, self.itemWD, enc_article_item)
-                if self.wd.id_in_item_describes(pname, enc_article_item.id, self.itemWD):
+                if self.wd.is_id_in_item_describes(pname, enc_article_item.id, self.itemWD):
                     # очистить значение ВИКИДАННЫЕ
                     return True
             else:
 
-                if not self.wd.id_in_item_describes(pname, enc_article_item.id, topic_item):
+                if not self.wd.is_id_in_item_describes(pname, enc_article_item.id, topic_item):
                     self.wd.add_article_in_subjectitem(pname, topic_item, enc_article_item)
-                if not self.wd.id_in_item_describes(pname, enc_article_item.id, topic_item):
+                if not self.wd.is_id_in_item_describes(pname, enc_article_item.id, topic_item):
                     # очистить значение ВИКИДАННЫЕ
                     return True
 
@@ -451,60 +451,21 @@ class Process:
 
             else:
                 # очистить значение ВИКИПЕДИЯ
-                if self.wd.param_value_equal_item(self.rootpagename, m_wp_pagename, self.itemWD, m_wp_page_item):
+                if self.wd.is_param_value_equal_item(self.rootpagename, m_wp_pagename, self.itemWD, m_wp_page_item):
                     return True
 
                 if self.make_wd_links:
                     # todo слишком общие страницы в ВИКИПЕДИЯ, не имеет смысла их связывать с элементом
                     # добавить свойство "основная тема"
-                    if not self.wd.id_in_item_topics(self.itemWD, m_wp_page_item.id):
+                    if not self.wd.is_id_in_item_topics(self.itemWD, m_wp_page_item.id):
                         self.wd.add_main_subject(self.itemWD, target=m_wp_page_item)
                     # todo создаёт дубли, или это было из-за повторного использования вд-свойствв
-                    if not self.wd.id_in_item_describes(self.rootpagename, self.itemWD.id, m_wp_page_item):
+                    if not self.wd.is_id_in_item_describes(self.rootpagename, self.itemWD.id, m_wp_page_item):
                         self.wd.add_article_in_subjectitem(self.rootpagename, m_wp_page_item, self.itemWD)
 
                     # очистить значение ВИКИПЕДИЯ
-                    if self.wd.param_value_equal_item(self.rootpagename, m_wp_pagename, self.itemWD, m_wp_page_item):
+                    if self.wd.is_param_value_equal_item(self.rootpagename, m_wp_pagename, self.itemWD, m_wp_page_item):
                         return True
-
-        # else:
-        #     # подключаем указанный в ручную item
-        #     # self.wd_item = pywikibot.ItemPage(WD, 'Q1057344')
-        #     self.wd_item = pywikibot.ItemPage(self.WD, m_item_id)
-        #     self.wd_item.get()
-        #
-        #     # if prj in self.wd_item.sitelinks and self.wd_item.getSitelink(prj) != self.page.title:
-        #
-        #     # в ВД другое значение
-        #     if self.is_author_tpl:
-        #         # if not prj in self.wd_item.sitelinks:
-        #         # self.wd_item.setSitelink(sitelink={'site': prj, 'title': title}, summary='sitelink')
-        #         pass
-        #
-        #         # проверяем запись и очищаем параметр
-        #         if self.wd_item.getSitelink(self.prj) == self.page.title():
-        #             mymwp.param_value_clear(tpl, param)
-        #
-        #     else:
-        #         # self.wd_item.addClaim.claims.get(Props.main_subject)
-        #
-        #         claim = pywikibot.Claim(self.WD, Props.main_subject)
-        #         target = pywikibot.ItemPage(self.WD, m_item_id)
-        #         claim.setTarget(target)
-        #         # self.wd_item.addClaim(claim, bot=self.as_bot, summary='add main subject')
-        #
-        #         # проверяем запись и очищаем параметр
-        #         linksWD = [i.id for i in self.wd_item.claims.get(Props.main_subject)]
-        #         if m_item_id in linksWD:
-        #             mymwp.param_value_clear(tpl, param)
-        #
-        #         # if self.wd_item.getSitelink('ruwikisource') == m_item_id:
-        #         #     self.wd_item.setSitelink(sitelink={'site': 'ruwikisource', 'title': title}, summary='sitelink')
-        #         #     # todo: очистить значение ВИКИДАННЫЕ
-        #         # else:
-        #         #     # todo: поставить категорию что getSitelink('ruwikisource') занято др. значением
-        #         #     pass
-        #         # # # else:
 
     def param_Wikidata(self, pname, m_item_id):
         tpl = self.tpl
@@ -597,20 +558,20 @@ class Process:
 
             else:
                 # очистить значение ВИКИПЕДИЯ
-                if self.wd.param_value_equal_item(self.rootpagename, m_wp_pagename, self.itemWD, m_wp_page_item):
+                if self.wd.is_param_value_equal_item(self.rootpagename, m_wp_pagename, self.itemWD, m_wp_page_item):
                     return True
 
                 if self.make_wd_links:
                     # todo слишком общие страницы в ВИКИПЕДИЯ, не имеет смысла их связывать с элементом
                     # добавить свойство "основная тема"
-                    if not self.wd.id_in_item_topics(self.itemWD, m_wp_page_item.id):
+                    if not self.wd.is_id_in_item_topics(self.itemWD, m_wp_page_item.id):
                         self.wd.add_main_subject(self.itemWD, target=m_wp_page_item)
                     # todo создаёт дубли, или это было из-за повторного использования вд-свойствв
-                    if not self.wd.id_in_item_describes(self.rootpagename, self.itemWD.id, m_wp_page_item):
+                    if not self.wd.is_id_in_item_describes(self.rootpagename, self.itemWD.id, m_wp_page_item):
                         self.wd.add_article_in_subjectitem(self.rootpagename, m_wp_page_item, self.itemWD)
 
                     # очистить значение ВИКИПЕДИЯ
-                    if self.wd.param_value_equal_item(self.rootpagename, m_wp_pagename, self.itemWD, m_wp_page_item):
+                    if self.wd.is_param_value_equal_item(self.rootpagename, m_wp_pagename, self.itemWD, m_wp_page_item):
                         return True
 
 
