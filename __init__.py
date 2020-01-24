@@ -20,10 +20,13 @@ from collections import OrderedDict
 from abc import abstractmethod
 import sys
 
-# logger = logging.getLogger('logger_')
-# log_handler = logging.StreamHandler()
-# log_handler.setLevel(logging.INFO)
-# log_handler.setFormatter(logging.Formatter('%(message)s'))
-# logger.addHandler(log_handler)
-# logging.basicConfig(level=logging.INFO, format='%(message)s')
+logger = logging.getLogger('logger_')
+log_handler = logging.StreamHandler()
+log_handler.setFormatter(logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s"))
+logger.addHandler(log_handler)
+logger.setLevel(logging.DEBUG)
+# # logging.basicConfig(level=logging.INFO, format='%(message)s')
+# logger..basicConfig(level=logging.INFO)
 # logger = logging.getLogger('example_logger')
+
+# logging.basicConfig(level=logging.INFO, format='%(message)s')
