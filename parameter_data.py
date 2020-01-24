@@ -99,17 +99,20 @@ class ManualParam:
         self.item: pwb.ItemPage
         """
         self.item = None
-        if self.page or self.name == 'ВИКИДАННЫЕ':
-            self.item = self.wd.get_item(self.wd.WD, self.page or self.pval)
+        if self.page:
+            self.item = self.wd.get_item_by_page(self.page)
+        if self.name == 'ВИКИДАННЫЕ':
+            self.item = self.wd.get_item_by_id(self.pval)
         if not self.item:
             self.set_skip('no m_wp_page_item')
             return
 
         # не работать по ссылкам на дизамбиги
-        try:
-            self.is_item_of_disambig = self.wd.is_item_of_disambig(self.item)
-        except:
-            pass
+        self.is_item_of_disambig = self.wd.is_item_of_disambig(self.item)
+        # try:
+        #     self.is_item_of_disambig = self.wd.is_item_of_disambig(self.item)
+        # except:
+        #     pass
 
         if self.is_item_of_disambig and self.processor.skip_wd_links_to_disambigs:
             self.set_skip(f'{self.name}: ссылка на дизамбиг')

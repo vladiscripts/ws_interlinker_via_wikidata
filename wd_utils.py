@@ -146,33 +146,53 @@ class WD_utils:
     #         item = None
     #     return item
 
-    def get_item(self, site: pwb.Site, pg: Union[str, pwb.Page]) -> Optional[pwb.ItemPage]:
+    def get_item_by_title(self, site: pwb.Site, title: str) -> Optional[pwb.ItemPage]:
+        page = pwb.Page(site, title)
+        item = self.get_item_by_page(page)
+        return item
+
+    def get_item_by_id(self, item_id: str) -> Optional[pwb.ItemPage]:
+        if pwb.ItemPage.is_valid_id(item_id):
+            item = pwb.ItemPage(self.WD, item_id)
+            return self.load_item(item)
+
+    def get_item_by_page(self, page: pwb.Page) -> Optional[pwb.ItemPage]:
+        if not isinstance(page, pwb.Page): return
+        try:
+            item = page.data_item()
+        except pwb.exceptions.NoPage:
+            pass
+        else:
+            return self.load_item(item)
+
+    def load_item(self, item: Optional[pwb.ItemPage]) -> Optional[pwb.ItemPage]:
+        if isinstance(item, pwb.ItemPage) and item.exists():
+            item.get()
+            return item
+
+    def _get_item(self, site: pwb.Site, pg: Union[str, pwb.Page]) -> Optional[pwb.ItemPage]:
         """
         :param site: pwb.Site
         :param pg: (str): название страницы, или id элемента ('Qxxx'), или pwb.Page
         :return: элемент или None
         """
+        item = None
         if isinstance(pg, str):
-            if self.re_is_item_id.match(pg):
+            if pwb.ItemPage.is_valid_id(pg):
                 item_id = pg
-                if not pwb.ItemPage.is_valid_id(item_id):
-                    pwb.stdout(f'not valid {item_id}')
-                    return None
                 item = pwb.ItemPage(site, item_id)
             else:
                 title = pg
                 pg = pwb.Page(site, title)
         if isinstance(pg, pwb.Page):
             try:
+                # item = pwb.ItemPage.fromPage(pg, lazy_load=True)
                 item = pg.data_item()
-                item.get()
-                return item
             except pwb.exceptions.NoPage:
                 pass
-            # item = pwb.ItemPage.fromPage(pg, lazy_load=True)
-            # if item and item.exists():
-            #     item.get()
-            #     return item
+        if item and item.exists():
+            item.get()
+            return item
 
     def get_WPsite(self, pagename_raw: str) -> Tuple[Optional[pwb.Site], Optional[str]]:
         # .target.title(with_ns=False)
