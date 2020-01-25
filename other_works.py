@@ -146,7 +146,7 @@ class TextWorks(Process):
                     pwb.stdout('ссылка на дизамбиг')
                     return
 
-        if self.require_ruwiki_sitelink_in_item:
+        if self.require_ruwiki_sitelink:
             sitelink = m_wp_page_item.sitelinks.get(f'{WP.lang}wiki')
             if sitelink:
                 if m_wp_pagename == sitelink.title:

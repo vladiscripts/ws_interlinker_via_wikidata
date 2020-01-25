@@ -9,7 +9,7 @@ from page_data import PageMeta
 
 class Process:
     works_pages_with_wditems: bool = True  # работать со страницами только имеющими элемент ВД
-    require_ruwiki_sitelink_in_item: bool = True  # пропускать страницы если у элемента темы нет страницы в ruwiki
+    require_ruwiki_sitelink: bool = True  # пропускать страницы если у элемента темы нет страницы в ruwiki
     skip_wd_links_to_disambigs: bool = True  # не работать по словарным ссылкам на дизамбиги
     make_wd_links: bool = False  # линковать ссылки ВД, иначе только удалять параметры дублирующие ВД
     work_only_enc: bool  # работать только по элементам типов 'Q17329259', 'Q1580166' (энц. и словар. статьи)
@@ -100,6 +100,10 @@ class Process:
     @abstractmethod
     def param_Wikidata(self, p, parameter):
         pass
+
+    def do_skip(self, p):
+        """Пропуск страницы по условию"""
+        pwb.stdout(p.cause)
 
     def pagegenerator_and_run(self):
         base_args = ['-family:wikisource', '-lang:ru', '-ns:0', '-format:"{page.can_title}"']

@@ -12,7 +12,8 @@ class ParamType(IntEnum):
 
 
 class ManualParam:
-    pname: Optional[str]
+    p: PageMeta
+    name: Optional[str]
     pval_raw: Optional[str]
     pval: Optional[str]
     pagename: str  # реальное название страницы, через редиректы
@@ -34,7 +35,8 @@ class ManualParam:
 
     re_remove_tagcomment = re.compile(r'<!--.*?-->', flags=re.DOTALL)
 
-    def __init__(self, processor, param):
+    def __init__(self, processor, parameter: Parameter, p: PageMeta):
+        self.is_item_of_disambig = False
         self.processor = processor
         self.wd = processor.wd
         self.p = p
