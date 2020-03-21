@@ -3,15 +3,11 @@ import wiki_util
 from main_class import Process
 # from page_data import PageMeta
 from __init__ import *
-
-"""Перенос ссылок на энциклопедии/словари из статей в Викиданые и создание там записи."""
-re_cat_redirect = re.compile(r'\[\[Категория:[^]]+?Перенаправления', flags=re.IGNORECASE)
+from pywikibot import pagegenerators, WikidataBot
 
 
-# def parse(title):
-#     page = pywikibot.Page(SITE, title)
-#     text = page.get()
-#     return mwparserfromhell.parse(text)
+class NewItemRobot(WikidataBot):
+    pass
 
 
 class Articles(Process):
@@ -110,6 +106,11 @@ class Articles(Process):
     def chk_wd_links_and_remove_param(self, p, param):
         if self.wd.is_id_in_item_topics(p.itemWD, param.item.id) \
                 and self.wd.is_id_in_item_describes(p, p.itemWD.id, param.item):
+
+            if param.name == 'ВИКИДАННЫЕ':
+                wiki_util.remove_param(p, param.name)
+                return
+
             if param.sitelink_ruwiki:
                 wiki_util.remove_param(p, param.name)
 
@@ -119,10 +120,16 @@ class Articles(Process):
                     wiki_util.remove_param(p, param.name, value_only=True)
 
                 else:
-                    if self.if_no_ruwiki_sitelink_in_item_then_leave_manual_ruwikilink_and_link_items:
-                        pwb.stdout('no ruwiki for m_wp_page, linking items and leave m_wp_page')
-                    else:
-                        wiki_util.remove_param(p, param.name)
+                    if f'{param.lang}wiki' in param.item.sitelinks:
+                        # todo
+                        if param.lang == 'en' \
+                                or (param.lang == 'de' and 'enwiki' not in param.item.sitelinks):
+                            wiki_util.remove_param(p, param.name, value_only=True)
+
+                        elif self.if_no_ruwiki_sitelink_in_item_then_leave_manual_ruwikilink_and_link_items:
+                            pwb.stdout('m_wp_page param linked with item, no ruwiki, leaved m_wp_page')
+                        else:
+                            wiki_util.remove_param(p, param.name, value_only=True)
 
     def disambigs(self, p, param):
         """ссылки на дизамбиги"""
@@ -136,6 +143,11 @@ class Articles(Process):
         #     p.do_skip = True
         #     return True
 
+
+# def parse(title):
+#     page = pywikibot.Page(SITE, title)
+#     text = page.get()
+#     return mwparserfromhell.parse(text)
 
 if __name__ == '__main__':
     # as_bot = True
@@ -199,11 +211,5 @@ if __name__ == '__main__':
         # '-onlyif:P31=Q17329259',
         # '-onlyif:P31=Q1580166',  # энц. и словар. статья
     ]
-
-    # args = base_args + sys.argv[1:]
-    # gen = wiki_util.get_pages(args)
-    # # gen = wiki_util.get_pages(base_args, ['-catr:Авторы:Ручная_ссылка'], intersect=False)
-    # for page in gen:
-    #     d.process_page(page)
 
     d.pagegenerator_and_run()

@@ -2,7 +2,7 @@ from __init__ import *
 from mwparserfromhell.nodes.extras import Parameter
 from enum import IntEnum
 import wiki_util
-from page_data import PageMeta
+from page import PageMeta
 
 
 class ParamType(IntEnum):
@@ -64,6 +64,7 @@ class ManualParam:
         if self.flow == ParamType.enc:
             self.get_enc_pagename()
         self.get_mw_page()
+        self.lang = self.page.site.lang if self.page else None
         # logger.debug(f'+get_mw_page()')
         self.get_mw_item()  # get pwb.Page, pwb.ItemPage
         # logger.debug(f'+get_mw_item()')
