@@ -29,7 +29,7 @@ class Author(Process):
     #     self.allowed_header_names = ['обавторе']
     #     # self.allowed_header_names.extend(self.enc_prefixes)
 
-    def param_encyclopedia(self, p, param):
+    def __param_encyclopedia(self, p, param):
         """ done для авторов
         """
         # m_enc=param.pval_raw
@@ -94,30 +94,36 @@ class Author(Process):
             #     pass
 
     def param_Wikipedia(self, p, param):
-        m_wp_pagename_raw = param.pval_raw
+        # m_wp_pagename_raw = param.pval_raw
 
         # WP, m_wp_pagename = self.wd.get_WPsite(param.pval_raw)
-        if not param.WP:
-            return
+        # if not param.WP:
+        #     return
 
         # m_enc_article_page = wiki_util.get_wikipage(self.wd.WS, page=m_pagename_enc)
 
         # param.item = self.wd.get_item(WP, title=m_wp_pagename)
-        if not param.item:
-            return
+        # if not param.item:
+        #     return
 
-        if self.require_ruwiki_sitelink_in_item and param.item.sitelinks.get('ruwiki'):
-            #     # if m_wp_pagename in m_wp_page_item.sitelinks.values():
-            #     # if m_wp_pagename == ruwiki:
-            #     if m_wp_pagename == m_wp_page_item.sitelinks.get(f'{WP.lang}wiki', ''):
-            #         p.params_to_delete.append(pname)
-            #         return
+        # if self.require_ruwiki_sitelink and param.item.sitelinks.get('ruwiki'):
+        #     #     # if m_wp_pagename in m_wp_page_item.sitelinks.values():
+        #     #     # if m_wp_pagename == ruwiki:
+        #     #     if m_wp_pagename == m_wp_page_item.sitelinks.get(f'{WP.lang}wiki', ''):
+        #     #         p.params_to_delete.append(pname)
+        #     #         return
+        #
+        #     sitelink = param.item.sitelinks.get(f'{param.WP.lang}wiki')
+        #     if sitelink:
+        #         if m_wp_pagename == sitelink.title:
+        #             p.params_to_delete.append(param.pname)
+        #             return
 
-            sitelink = param.item.sitelinks.get(f'{param.WP.lang}wiki')
-            if sitelink:
-                if m_wp_pagename == sitelink.title:
-                    p.params_to_delete.append(param.pname)
-                    return
+        # todo проверить
+        self.disambigs(p, param)  # не работать по ссылкам на дизамбиги
+
+        if param.sitelink_ruwiki:
+            wiki_util.remove_param(p, param.name)
 
         # различаются значения в ручном параметре и в ВД
         # p.itemWD.sitelinks.get('ruwikisource')
@@ -296,6 +302,23 @@ class Author(Process):
         #         if self.wd.param_value_equal_item(p.rootpagename, m_wp_pagename, p.itemWD, m_wp_page_item):
         #             return True
 
+    def disambigs(self, p, param):
+        """ссылки на дизамбиги"""
+        # is_item_of_disambig = self.wd.is_item_of_disambig(param.item)
+        wiki_util.set_or_remove_category(p, cat_name=f'Ручная ссылка на неоднозначность:{param.name.capitalize()}',
+                                         condition=param.is_item_of_disambig, add_cat=self.skip_wd_links_to_disambigs,
+                                         # log_on_add=f'{param.name}: ссылка на дизамбиг'
+                                         )
+        # if param.is_item_of_disambig and self.skip_wd_links_to_disambigs:
+        #     pwb.stdout(f'{param.name}: ссылка на дизамбиг')
+        #     p.do_skip = True
+        #     return True
+
+
+# def parse(title):
+#     page = pwb.Page(SITE, title)
+#     text = page.get()
+#     return mwparserfromhell.parse(text)
 
 if __name__ == '__main__':
     # as_bot = True
@@ -359,9 +382,5 @@ if __name__ == '__main__':
         # '-intersect',
         # '-file:/tmp/list.txt',
     ]
-    # gen = wiki_util.get_pages(args)
-    # # gen = wiki_util.get_pages(base_args, ['-catr:Авторы:Ручная_ссылка'], intersect=False)
-    # for page in gen:
-    #     d.process_page(page)
 
     d.pagegenerator_and_run()

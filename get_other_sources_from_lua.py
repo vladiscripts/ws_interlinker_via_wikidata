@@ -6,7 +6,6 @@ import json
 
 
 def parse_lua_to_dict(WS, page_name, var_name):
-    """ deprecated, don't using, replaced to json """
     lua_module = pwb.Page(WS, page_name)
     t = re.sub(r'--.+?\n', '', lua_module.text)
     other_sources_raw = re.search(var_name + r'\s*=\s*{'
