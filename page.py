@@ -72,7 +72,7 @@ class PageMeta:
         """фильтр по размеру текста"""
         if not self.processor.skip_by_text_lengh:
             return
-        if self.enc_with_transcludes:
+        if self.enc_with_transcludes or '<pages index' in self.text:
             return
         for _tpl in self.wikicode.filter_templates():
             if _tpl.name.strip() in self.allowed_header_names:
