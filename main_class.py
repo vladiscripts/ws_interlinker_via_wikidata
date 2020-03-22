@@ -209,7 +209,7 @@ def make_list():
     #     import run_articles
     #     d = run_articles.Articles(test_run=False)
     base_list = wdb_query(make_sql(lastedit_days=7000))
-    s = '\n'.join((t.decode() for i, t in base_list))
+    s = '\n'.join((t.decode() for pid, t in base_list if not t.decode().startswith('ТСД')))
     Path('base_list.txt').write_text(s)
     # with io.StringIO(s) as fp: a=fp.read()
     import itertools
