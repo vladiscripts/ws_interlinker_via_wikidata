@@ -55,7 +55,7 @@ def pagegenerator(args: list = None):
     gen_factory = pwb.pagegenerators.GeneratorFactory()
     local_args = pwb.handle_args(args)
     for arg in local_args:
-        gen_factory.handleArg(arg)
+        gen_factory.handle_arg(arg)
     gen = gen_factory.getCombinedGenerator(preload=False)
     return gen
 
