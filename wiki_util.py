@@ -10,7 +10,7 @@ from __init__ import *
 # import pywikibot as pwb
 # from vladi_helpers import vladi_helpers
 # from vladi_helpers.file_helpers import csv_save_dict_fromListWithHeaders, json_save_to_file, json_load_from_file
-import vladi_helpers.lib_for_mwparserfromhell as mymwp
+# import vladi_helpers.lib_for_mwparserfromhell as mymwp
 
 
 # def parse_pagename(title: str) ->Optional[pwb.Page]:
