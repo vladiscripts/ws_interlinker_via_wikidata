@@ -69,7 +69,7 @@ class Process:
         # logger.debug(f'-')
 
     def process_params(self, p: PageMeta):
-        """Итератоция по параметрам шаблона"""
+        """Итерация по параметрам шаблона"""
         # if p.is_author_tpl:
         #     self.author()
 
