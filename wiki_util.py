@@ -104,3 +104,8 @@ def set_or_remove_category(p, cat_name: str, condition: bool, add_cat: bool = Fa
     else:
         for i in p.wikicode.filter_wikilinks(matches=cat_full_re):
             p.wikicode.remove(i)
+
+# def parse(title):
+#     page = pywikibot.Page(SITE, title)
+#     text = page.get()
+#     return mwparserfromhell.parse(text)

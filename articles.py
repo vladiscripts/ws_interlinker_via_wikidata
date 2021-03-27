@@ -4,15 +4,6 @@ from main_class import Process
 # from page_data import PageMeta
 from __init__ import *
 
-"""Перенос ссылок на энциклопедии/словари из статей в Викиданые и создание там записи."""
-re_cat_redirect = re.compile(r'\[\[Категория:[^]]+?Перенаправления', flags=re.IGNORECASE)
-
-
-# def parse(title):
-#     page = pywikibot.Page(SITE, title)
-#     text = page.get()
-#     return mwparserfromhell.parse(text)
-
 
 class Articles(Process):
     # works_pages_with_wditems: bool = True  # работать со страницами только имеющими элемент ВД

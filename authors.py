@@ -3,15 +3,6 @@ from __init__ import *
 import wiki_util
 from main_class import Process
 
-"""Перенос ссылок на энциклопедии/словари из статей в Викиданые и создание там записи."""
-re_cat_redirect = re.compile(r'\[\[Категория:[^]]+?Перенаправления', flags=re.IGNORECASE)
-
-
-# def parse(title):
-#     page = pwb.Page(SITE, title)
-#     text = page.get()
-#     return mwparserfromhell.parse(text)
-
 
 class Author(Process):
     # works_pages_with_wditems: bool = True  # работать со страницами только имеющими элемент ВД
