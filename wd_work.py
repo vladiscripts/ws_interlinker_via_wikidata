@@ -8,8 +8,8 @@ class PropertiesID(NamedTuple):
     topic_subject = 'P921'  # основная тема
     described_by_source = 'P1343'  # описывается в источниках
     dedicated_article = 'P805'  # тема утверждения
-    types_to_search = 'Q13433827', 'Q17329259', 'Q1580166'  # энц. и словар. статья
-    enc_article_item = 'Q10389811'  # энц. статья
+    types_to_search = 'Q13433827', 'Q1580166'  # энц. и словар. статья
+    enc_article_item = 'Q10389811'  # энц. запись (её подклассы: энц. и словар. статья)
     disambig = 'Q4167410'  # дизамбиг, страница значений в проекте Викимедиа
 
 
