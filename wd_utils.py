@@ -167,7 +167,8 @@ class WD_utils:
 
     def load_item(self, item: Optional[pwb.ItemPage]) -> Optional[pwb.ItemPage]:
         if isinstance(item, pwb.ItemPage) and item.exists():
-            item.get()
+            while item.isRedirectPage():
+                item = item.getRedirectTarget()
             return item
 
     def _get_item(self, site: pwb.Site, pg: Union[str, pwb.Page]) -> Optional[pwb.ItemPage]:
