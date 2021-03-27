@@ -56,7 +56,7 @@ class Process:
         for tpl in p.wikicode.filter_templates():
             tpl_name = tpl.name.strip()
             if tpl_name in self.allowed_header_names:
-                p.tpl_data(tpl)
+                p.add_tpl_data(tpl)
                 # logger.debug(f'{p.tpl_name=}')
                 # if p.is_author_tpl is None: return
                 self.process_params(p)
