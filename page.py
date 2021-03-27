@@ -76,7 +76,7 @@ class PageMeta:
             return
         for _tpl in self.wikicode.filter_templates():
             if _tpl.name.strip() in self.allowed_header_names:
-                self.tpl_data(_tpl)
+                self.add_tpl_data(_tpl)
                 break
 
         if self.tpl:
@@ -96,7 +96,7 @@ class PageMeta:
                 self.short_page = True
                 return
 
-    def tpl_data(self, tpl: mwp.wikicode.Template):
+    def add_tpl_data(self, tpl: mwp.wikicode.Template):
         self.tpl = tpl
         self.tpl_name = tpl.name.strip()
         # self.is_author_tpl = self.tplname.lower() in allowed_header_names
