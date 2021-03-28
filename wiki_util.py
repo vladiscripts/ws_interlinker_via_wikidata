@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-# coding: utf-8
-from __init__ import *
 # import requests
 # import sqlite3
 # import json
@@ -11,6 +9,7 @@ from __init__ import *
 # from vladi_helpers import vladi_helpers
 # from vladi_helpers.file_helpers import csv_save_dict_fromListWithHeaders, json_save_to_file, json_load_from_file
 # import vladi_helpers.lib_for_mwparserfromhell as mymwp
+from __init__ import *
 
 
 # def parse_pagename(title: str) ->Optional[pwb.Page]:
