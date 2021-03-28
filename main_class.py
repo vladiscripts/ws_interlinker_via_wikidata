@@ -117,3 +117,15 @@ class Process:
         # gen = wiki_util.get_pages(base_args, ['-catr:Авторы:Ручная_ссылка'], intersect=False)
         for page in gen:
             self.process_page(page)
+
+    def disambigs(self, p, param):
+        """ссылки на дизамбиги"""
+        # is_item_of_disambig = self.wd.is_item_of_disambig(param.item)
+        wiki_util.set_or_remove_category(p, cat_name=f'Ручная ссылка на неоднозначность:{param.name.capitalize()}',
+                                         condition=param.is_item_of_disambig, add_cat=self.skip_wd_links_to_disambigs,
+                                         # log_on_add=f'{param.name}: ссылка на дизамбиг'
+                                         )
+        # if param.is_item_of_disambig and self.skip_wd_links_to_disambigs:
+        #     pwb.stdout(f'{param.name}: ссылка на дизамбиг')
+        #     p.do_skip = True
+        #     return True
