@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-# coding: utf-8
-from __init__ import *
 # import requests
 # import sqlite3
 # import json
@@ -10,7 +8,8 @@ from __init__ import *
 # import pywikibot as pwb
 # from vladi_helpers import vladi_helpers
 # from vladi_helpers.file_helpers import csv_save_dict_fromListWithHeaders, json_save_to_file, json_load_from_file
-import vladi_helpers.lib_for_mwparserfromhell as mymwp
+# import vladi_helpers.lib_for_mwparserfromhell as mymwp
+from __init__ import *
 
 
 # def parse_pagename(title: str) ->Optional[pwb.Page]:
@@ -104,3 +103,8 @@ def set_or_remove_category(p, cat_name: str, condition: bool, add_cat: bool = Fa
     else:
         for i in p.wikicode.filter_wikilinks(matches=cat_full_re):
             p.wikicode.remove(i)
+
+# def parse(title):
+#     page = pywikibot.Page(SITE, title)
+#     text = page.get()
+#     return mwparserfromhell.parse(text)
