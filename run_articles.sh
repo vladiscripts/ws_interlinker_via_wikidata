@@ -4,7 +4,9 @@
 source $PYTHONENV/bin/activate
 cd ~/scripts/interlinker_by_wikidata_ws
 # PYTHONIOENCODING="utf-8"
-LANG="ru_RU.UTF-8" ./articles.py -cat:"Ручная ссылка:Викиданные" -cat:"Ручная ссылка:Википедия" -intersect -recentchanges:0,10080
+LANG="ru_RU.UTF-8"
+./articles.py -cat:"Ручная ссылка:Викиданные" -intersect -recentchanges:0,10080
+./articles.py -cat:"Ручная ссылка:Википедия" -intersect -recentchanges:0,10080
 # LANG="ru_RU.UTF-8" ./articles.py -titleregexnot:"^ТСД" -cat:"Ручная ссылка:Википедия" -onlyif:P31=Q13433827
 # LANG="ru_RU.UTF-8" ./articles.py -titleregexnot:"^ТСД" -cat:"Ручная ссылка:Википедия" -onlyif:P31=Q17329259
 # LANG="ru_RU.UTF-8" ./articles.py -titleregexnot:"^ТСД" -cat:"Ручная ссылка:Википедия" -onlyif:P31=Q1580166
