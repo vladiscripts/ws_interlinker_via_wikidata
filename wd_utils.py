@@ -142,7 +142,7 @@ class WD_utils:
     #                 item = page.data_item()
     #         if item:
     #             item.get()
-    #     except pwb.exceptions.NoPage:
+    #     except pwb.exceptions.NoPageError:
     #         item = None
     #     return item
 
@@ -160,7 +160,7 @@ class WD_utils:
         if not isinstance(page, pwb.Page): return
         try:
             item = page.data_item()
-        except pwb.exceptions.NoPage:
+        except pwb.exceptions.NoPageError:
             pass
         else:
             return self.load_item(item)
@@ -189,7 +189,7 @@ class WD_utils:
             try:
                 # item = pwb.ItemPage.fromPage(pg, lazy_load=True)
                 item = pg.data_item()
-            except pwb.exceptions.NoPage:
+            except pwb.exceptions.NoPageError:
                 pass
         if item and item.exists():
             item.get()
