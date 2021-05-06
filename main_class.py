@@ -110,13 +110,7 @@ class Process:
     def pagegenerator_and_run(self):
         base_args = ['-site:wikisource:ru', '-ns:0', '-format:"{page.can_title}"']
         args = base_args + sys.argv[1:]
-
-        # if self.__class__.__name__ == 'Articles':
-        #     import run_articles
-        #     d = run_articles.Articles(test_run=False)
-
         gen = wiki_util.pagegenerator(args)
-        # gen = wiki_util.get_pages(base_args, ['-catr:Авторы:Ручная_ссылка'], intersect=False)
         for page in gen:
             self.process_page(page)
 
