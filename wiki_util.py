@@ -108,3 +108,14 @@ def set_or_remove_category(p, cat_name: str, condition: bool, add_cat: bool = Fa
 #     page = pywikibot.Page(SITE, title)
 #     text = page.get()
 #     return mwparserfromhell.parse(text)
+
+def iter_user_contributions(substr='', total=5, namespaces=0, minus_days=0, minus_hours=3,
+                            start=None, end=None):
+    from datetime import datetime, timedelta
+    from wd_utils import WD_utils
+    if minus_days or minus_hours:
+        start = datetime.utcnow() - timedelta(days=minus_days, hours=minus_hours)
+    u = pwb.User(WD_utils.WS, 'TextworkerBot')
+    for page, revid, timestamp, summary in u.contributions(total=total, namespaces=namespaces, start=start, end=end):
+        if substr in summary:
+            return page
