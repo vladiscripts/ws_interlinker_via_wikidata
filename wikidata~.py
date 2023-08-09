@@ -10,7 +10,7 @@ import re
 from typing import Iterable, Union
 import pywikibot
 import mwparserfromhell as mwp
-import vladi_helpers.lib_for_mwparserfromhell as mymwp
+# import vladi_helpers.lib_for_mwparserfromhell as mymwp
 import wiki_util
 # from wikidata import wiki_util
 from wd_utils import WD_utils, props
