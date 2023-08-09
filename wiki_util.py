@@ -58,9 +58,18 @@ def pagegenerator(args: list = None):
     gen = gen_factory.getCombinedGenerator(preload=False)
     return gen
 
+def removeTplParameters(tpl, keys, remove_value_only=False):
+    if keys and isinstance(keys, str): keys = (keys,)
+    for k in keys:
+        if tpl.has(k):
+            if remove_value_only:
+                tpl.get(k).value = '\n' if '\n' in tpl.get(k).value else ''
+            else:
+                tpl.remove(k)
+    return True
 
 def remove_param(p, name: str, value_only: bool = False) -> None:
-    mymwp.removeTplParameters(p.tpl, name, remove_value_only=value_only)
+    removeTplParameters(p.tpl, name, remove_value_only=value_only)
     if value_only:
         p.params_to_value_clear.append(name)
     else:

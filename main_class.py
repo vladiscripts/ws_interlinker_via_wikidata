@@ -41,7 +41,7 @@ class Process:
 
         self.enc_prefixes = tuple(self.enc_metas.keys())
 
-        # маппер парамет-функция, по порядку обработки
+        # маппер параметр-функция, по порядку обработки
         self.mapper_paramfunc = OrderedDict((
             ('ВИКИДАННЫЕ', self.param_Wikidata),
             ('ВИКИПЕДИЯ', self.param_Wikipedia),
