@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
-import requests
+# import requests
 # from vladi_helpers import vladi_helpers
-from vladi_helpers.vladi_helpers import url_params_str_to_dict, url_params_str_to_list
-from vladi_helpers.file_helpers import json_save_to_file, json_load_from_file, file_savetext, file_readtext
-from vladi_helpers.vladi_helpers import url_params_str_to_dict, url_params_str_to_list
-import sqlite3
-import json
-from lxml.html import fromstring  # import html5lib
-from urllib.parse import urlsplit, parse_qs, parse_qsl, unquote, quote, urlencode, urlunsplit
-import pandas as pd
-import os, io
-from pathlib import Path
+# from vladi_helpers.vladi_helpers import url_params_str_to_dict, url_params_str_to_list
+# from vladi_helpers.file_helpers import json_save_to_file, json_load_from_file, file_savetext, file_readtext
+# from vladi_helpers.vladi_helpers import url_params_str_to_dict, url_params_str_to_list
+# import sqlite3
+# import json
+# from lxml.html import fromstring  # import html5lib
+# from urllib.parse import urlsplit, parse_qs, parse_qsl, unquote, quote, urlencode, urlunsplit
+# import pandas as pd
+# import os, io
+# from pathlib import Path
 from datetime import datetime
 
 
