@@ -79,6 +79,8 @@ class Process:
             if p.do_skip:
                 return
             if param.do_skip:
+                # if param.cause:
+                #     pwb.stdout(param.cause)
                 continue
 
             # запуск функции обработки параметра, устанавливается в self.mapper_paramfunc

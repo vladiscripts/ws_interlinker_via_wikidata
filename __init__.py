@@ -12,7 +12,8 @@
 import re
 import pywikibot as pwb
 import mwparserfromhell as mwp
-import vladi_helpers.lib_for_mwparserfromhell as mymwp
+# import vladi_helpers.lib_for_mwparserfromhell as mymwp
+# import vladi_wikihelpers.lib_for_mwparserfromhell as mymwp
 import logging
 from typing import Tuple, List, Optional, Any, Iterable, Union, Callable
 # from typing import NamedTuple
