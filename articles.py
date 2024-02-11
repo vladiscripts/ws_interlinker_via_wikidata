@@ -31,7 +31,7 @@ class Articles(Process):
         super().__init__()
         self.test_run = test_run
         # self.allowed_header_names = tuple(s.lower() for s in ['отексте'] + list(self.enc_prefixes))
-        self.allowed_header_names = tuple(['отексте', 'ЛЕНТАПЕДИЯ'] + list(self.enc_prefixes))
+        self.allowed_header_names = tuple(['отексте', 'ЛЕНТАПЕДИЯ', 'Словарная статья'] + list(self.enc_prefixes))
 
     # def param_encyclopedia(self, p, name, m_enc):
     #     """ done для авторов

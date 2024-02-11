@@ -111,7 +111,7 @@ class Process:
         pwb.stdout(p.cause)
 
     def pagegenerator_and_run(self):
-        base_args = ['-family:wikisource', '-lang:ru', '-ns:0', '-format:"{page.can_title}"']
+        base_args = ['-site:wikisource:ru', '-ns:0', '-format:"{page.can_title}"']
         args = base_args + sys.argv[1:]
 
         # if self.__class__.__name__ == 'Articles':
